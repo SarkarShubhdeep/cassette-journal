@@ -1,6 +1,6 @@
 import { auth0 } from "@/lib/auth0";
 import LoginButton from "@/components/LoginButton";
-import LogoutButton from "@/components/LogoutButton";
+// import LogoutButton from "@/components/LogoutButton";
 import HomeContent from "@/components/HomeContent";
 
 import BGImage from "../../public/assets/bg-temp.png";

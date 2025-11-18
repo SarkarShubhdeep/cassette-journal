@@ -30,7 +30,7 @@ async function verifyPostOwnership(postId: number, userEmail: string) {
 // GET single post
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await auth0.getSession();
@@ -41,7 +41,8 @@ export async function GET(
             );
         }
 
-        const postId = parseInt(params.id);
+        const { id } = await params;
+        const postId = parseInt(id);
         const post = await verifyPostOwnership(postId, session.user.email!);
 
         if (!post) {
@@ -64,7 +65,7 @@ export async function GET(
 // PUT update post
 export async function PUT(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await auth0.getSession();
@@ -75,7 +76,8 @@ export async function PUT(
             );
         }
 
-        const postId = parseInt(params.id);
+        const { id } = await params;
+        const postId = parseInt(id);
         const body = await request.json();
         const { title, content } = body;
 
@@ -120,7 +122,7 @@ export async function PUT(
 // DELETE post
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await auth0.getSession();
@@ -131,7 +133,8 @@ export async function DELETE(
             );
         }
 
-        const postId = parseInt(params.id);
+        const { id } = await params;
+        const postId = parseInt(id);
 
         // Verify ownership before deleting
         const existingPost = await verifyPostOwnership(
