@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "./ui/button";
-import { ArrowLeft, Trash2, Save } from "lucide-react";
+import { ArrowLeft, AudioWaveform, Smile } from "lucide-react";
+import { ProgressiveBlur } from "./ui/progressive-blur";
+import { transcode } from "buffer";
 
 interface Post {
     id: number;
@@ -100,7 +102,7 @@ export default function PostEditor({ postId }: { postId: number }) {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
+            <div className="flex min-h-screen items-center justify-center">
                 <p className="text-slate-400">Loading...</p>
             </div>
         );
@@ -108,9 +110,9 @@ export default function PostEditor({ postId }: { postId: number }) {
 
     if (error && !post) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
+            <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-slate-900 to-slate-800">
                 <div className="text-center">
-                    <p className="text-red-400 mb-4">{error}</p>
+                    <p className="mb-4 text-red-400">{error}</p>
                     <Button onClick={() => router.push("/")} variant="outline">
                         Go Back
                     </Button>
@@ -120,85 +122,101 @@ export default function PostEditor({ postId }: { postId: number }) {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-8">
-            <div className="max-w-4xl mx-auto">
-                {/* Header with Back Button */}
-                <div className="flex items-center justify-between mb-8">
-                    <Button
-                        onClick={() => router.push("/")}
-                        variant="ghost"
-                        className="text-slate-400 hover:text-white flex items-center gap-2"
-                    >
-                        <ArrowLeft size={20} />
-                        Back to Files
-                    </Button>
+        <div className="min-h-screen">
+            <div className="relative mx-auto flex h-full max-w-4xl flex-col items-center justify-center">
+                {/* Fixed Header */}
+                <div className="from-background to-background/0 fixed top-0 z-20 flex w-full max-w-4xl items-center justify-between bg-linear-to-b px-4 pt-8">
+                    <div className="flex flex-1">
+                        <Button
+                            onClick={() => router.push("/")}
+                            variant="ghost"
+                            className="flex items-center gap-2"
+                        >
+                            <ArrowLeft size={20} />
+                            Home
+                        </Button>
+                    </div>
 
-                    <div className="flex gap-3">
+                    {/* Title Input */}
+                    <div className="flex flex-1 flex-col items-center text-center">
+                        <input
+                            type="text"
+                            value={title}
+                            onChange={handleTitleChange}
+                            placeholder="File title..."
+                            className="w-full text-center text-xl font-semibold focus:outline-none"
+                        />
+                        {/* Save Status */}
+                        {hasChanges && (
+                            <div className="text-sm text-amber-400">
+                                You have unsaved changes
+                            </div>
+                        )}
+                        {/* Last modified */}
+                        <p className="text-muted-foreground text-sm">
+                            Last updated:{" "}
+                            {post
+                                ? new Date(post.updatedAt).toLocaleString()
+                                : "N/A"}
+                        </p>
+                    </div>
+
+                    <div className="flex flex-1 justify-end gap-3">
                         {error && (
-                            <div className="text-red-400 text-sm">{error}</div>
+                            <div className="text-sm text-red-400">{error}</div>
                         )}
                         <Button
                             onClick={handleDelete}
                             variant="destructive"
                             className="flex items-center gap-2"
                         >
-                            <Trash2 size={18} />
                             Delete
                         </Button>
                         <Button
                             onClick={handleSave}
                             disabled={!hasChanges || saving}
-                            className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+                            className="flex items-center gap-2"
                         >
-                            <Save size={18} />
                             {saving ? "Saving..." : "Save"}
                         </Button>
                     </div>
                 </div>
 
-                {/* Title Input */}
-                <div className="mb-6">
-                    <input
-                        type="text"
-                        value={title}
-                        onChange={handleTitleChange}
-                        placeholder="File title..."
-                        className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-2xl font-bold"
-                    />
+                {/* Fixed Bottom Bar */}
+                <div className="fixed bottom-0 z-20 flex w-full max-w-4xl items-center justify-center gap-2 px-4 py-8">
+                    <Button
+                        onClick={() => router.push("/")}
+                        className="h-[60px] w-[60px] bg-linear-to-br from-lime-500 to-blue-500"
+                    >
+                        <Smile
+                            // size={60}
+                            className="h-[24px]! w-[24px]! text-white"
+                        />
+                    </Button>
+                    <Button
+                        onClick={() => router.push("/")}
+                        className="h-[60px] w-[60px]"
+                    >
+                        <AudioWaveform className="h-[24px]! w-[24px]!" />
+                    </Button>
                 </div>
 
                 {/* Content Editor */}
-                <div className="bg-slate-700/50 border border-slate-600 rounded-lg overflow-hidden">
-                    <textarea
-                        value={content}
-                        onChange={handleContentChange}
-                        placeholder="Start typing your content..."
-                        className="w-full bg-slate-700/50 text-white placeholder-slate-500 p-6 focus:outline-none resize-none"
-                        style={{ minHeight: "500px" }}
-                    />
-                </div>
-
-                {/* Save Status */}
-                {hasChanges && (
-                    <div className="mt-4 text-amber-400 text-sm">
-                        You have unsaved changes
+                <div className="flex h-screen w-full flex-col items-center justify-center">
+                    <div className="relative h-full w-full overflow-hidden py-[120px]">
+                        <ProgressiveBlur
+                            position="top"
+                            // z-index="5"
+                            height="200px"
+                            className="fixed"
+                        />
+                        <textarea
+                            value={content}
+                            onChange={handleContentChange}
+                            placeholder="Start typing your content..."
+                            className="h-full w-full resize-none border-red-500 bg-transparent px-6 py-20 font-mono focus:outline-none"
+                        />
                     </div>
-                )}
-
-                {/* Metadata */}
-                <div className="mt-8 text-slate-500 text-sm space-y-1">
-                    <p>
-                        Created:{" "}
-                        {post
-                            ? new Date(post.createdAt).toLocaleString()
-                            : "N/A"}
-                    </p>
-                    <p>
-                        Last updated:{" "}
-                        {post
-                            ? new Date(post.updatedAt).toLocaleString()
-                            : "N/A"}
-                    </p>
                 </div>
             </div>
         </div>

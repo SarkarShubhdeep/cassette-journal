@@ -20,7 +20,8 @@ export default function RootLayout({
                     <ThemeProvider
                         attribute="class"
                         defaultTheme="dark"
-                        // enableSystem
+                        enableSystem
+                        storageKey="cassette-theme"
                     >
                         {children}
                     </ThemeProvider>
