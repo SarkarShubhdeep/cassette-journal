@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import LogoutButton from "./LogoutButton";
-import SettingsModal from "./SettingsModal";
+import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "./ui/button";
-import { Trash2, Plus, Settings } from "lucide-react";
+import { Trash2, Plus } from "lucide-react";
 
 interface Post {
     id: number;
@@ -33,7 +33,6 @@ export default function HomeContent({ user }: { user: User }) {
     const [dbUser, setDbUser] = useState<DbUser | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [settingsOpen, setSettingsOpen] = useState(false);
 
     useEffect(() => {
         fetchUserProfile();
@@ -111,108 +110,76 @@ export default function HomeContent({ user }: { user: User }) {
         }
     };
 
-    const handleSaveName = async (newName: string) => {
-        try {
-            const response = await fetch("/api/users/profile", {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: newName }),
-            });
-            const data = await response.json();
-            if (data.success) {
-                setDbUser(data.data);
-            } else {
-                throw new Error(data.error || "Failed to update profile");
-            }
-        } catch (err) {
-            throw err;
-        }
-    };
-
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-8">
-            <div className="max-w-6xl mx-auto">
+        <div className="min-h-screen p-8">
+            <div className="mx-auto max-w-6xl">
                 {/* Header */}
-                <div className="flex justify-between items-center mb-12">
+                <div className="mb-12 flex items-center justify-between">
                     <div>
-                        <h1 className="text-4xl font-bold text-white mb-2">
+                        <h1 className="mb-2 text-4xl font-bold">
                             Cassette Journal
                         </h1>
                         <p className="text-slate-400">
                             Welcome, {dbUser?.name || user.name || user.email}
                         </p>
                         {!dbUser?.name && (
-                            <p className="text-xs text-amber-400 mt-1">
+                            <p className="mt-1 text-xs text-amber-400">
                                 👤 No name set yet
                             </p>
                         )}
                     </div>
                     <div className="flex gap-3">
+                        {/* Create New Button */}
                         <Button
-                            onClick={() => setSettingsOpen(true)}
-                            variant="outline"
-                            className="flex items-center gap-2"
+                            onClick={handleCreateNew}
+                            className="flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700"
                         >
-                            <Settings size={18} />
-                            Settings
+                            <Plus size={20} />
+                            New File
                         </Button>
+                        <ThemeToggle />
                         <LogoutButton />
                     </div>
                 </div>
 
-                {/* Create New Button */}
-                <div className="mb-8">
-                    <Button
-                        onClick={handleCreateNew}
-                        className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
-                    >
-                        <Plus size={20} />
-                        New File
-                    </Button>
-                </div>
-
                 {/* Error Message */}
                 {error && (
-                    <div className="bg-red-500/20 border border-red-500 text-red-200 p-4 rounded-lg mb-6">
+                    <div className="mb-6 rounded-lg border border-red-500 bg-red-500/20 p-4 text-red-200">
                         {error}
                     </div>
                 )}
 
                 {/* Loading State */}
                 {loading && (
-                    <div className="text-center py-12">
+                    <div className="py-12 text-center">
                         <p className="text-slate-400">Loading your files...</p>
                     </div>
                 )}
 
                 {/* Posts List */}
                 {!loading && posts.length === 0 && (
-                    <div className="text-center py-12">
-                        <p className="text-slate-400 mb-4">
+                    <div className="py-12 text-center">
+                        <p className="mb-4">
                             No files yet. Create your first one!
                         </p>
                     </div>
                 )}
 
                 {!loading && posts.length > 0 && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
                         {posts.map((post) => (
-                            <Link
-                                key={post.id}
-                                href={`/posts/${post.id}`}
-                                className="group"
-                            >
-                                <div className="bg-slate-700/50 hover:bg-slate-700 border border-slate-600 hover:border-slate-500 rounded-lg p-6 transition-all duration-200 cursor-pointer h-full flex flex-col">
-                                    <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-blue-400 transition-colors line-clamp-2">
+                            <Link key={post.id} href={`/posts/${post.id}`}>
+                                <div className="ark:hover:bg-slate-700 dark:bg-card flex h-full cursor-pointer flex-col bg-gray-100 p-6 transition-all duration-200 hover:bg-slate-300 dark:hover:bg-slate-800">
+                                    <h3 className="mb-2 line-clamp-2 text-lg font-semibold transition-colors">
                                         {post.title}
                                     </h3>
-                                    <p className="text-slate-400 text-sm mb-4 flex-grow line-clamp-3">
+                                    <p className="text-muted-foreground mb-4 line-clamp-2 grow text-sm">
                                         {post.content || "No content yet..."}
                                     </p>
-                                    <div className="flex justify-between items-center pt-4 border-t border-slate-600">
-                                        <span className="text-xs text-slate-500">
+                                    <div className="flex items-center justify-between border-t border-slate-600 pt-4">
+                                        <span className="text-xs">
                                             {new Date(
-                                                post.updatedAt
+                                                post.updatedAt,
                                             ).toLocaleDateString()}
                                         </span>
                                         <button
@@ -220,7 +187,7 @@ export default function HomeContent({ user }: { user: User }) {
                                                 e.preventDefault();
                                                 handleDelete(post.id);
                                             }}
-                                            className="text-slate-400 hover:text-red-400 transition-colors"
+                                            className="transition-colors hover:text-red-400"
                                         >
                                             <Trash2 size={18} />
                                         </button>
@@ -231,13 +198,6 @@ export default function HomeContent({ user }: { user: User }) {
                     </div>
                 )}
             </div>
-
-            <SettingsModal
-                isOpen={settingsOpen}
-                onClose={() => setSettingsOpen(false)}
-                currentName={dbUser?.name || ""}
-                onSave={handleSaveName}
-            />
         </div>
     );
 }

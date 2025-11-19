@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export default function LogoutButton() {
     return (
-        <Button asChild>
+        <Button asChild variant="secondary">
             <Link href="/auth/logout">Log Out</Link>
         </Button>
     );
