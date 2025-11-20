@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "./ui/button";
-import { ArrowLeft, AudioWaveform, Smile } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { ProgressiveBlur } from "./ui/progressive-blur";
-import { transcode } from "buffer";
+import { ContentEditor } from "./ContentEditor";
 
 interface Post {
     id: number;
@@ -53,8 +53,8 @@ export default function PostEditor({ postId }: { postId: number }) {
         setHasChanges(true);
     };
 
-    const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setContent(e.target.value);
+    const handleContentChange = (newContent: string) => {
+        setContent(newContent);
         setHasChanges(true);
     };
 
@@ -182,39 +182,19 @@ export default function PostEditor({ postId }: { postId: number }) {
                     </div>
                 </div>
 
-                {/* Fixed Bottom Bar */}
-                <div className="fixed bottom-0 z-20 flex w-full max-w-4xl items-center justify-center gap-2 px-4 py-8">
-                    <Button
-                        onClick={() => router.push("/")}
-                        className="h-[60px] w-[60px] bg-linear-to-br from-lime-500 to-blue-500"
-                    >
-                        <Smile
-                            // size={60}
-                            className="h-[24px]! w-[24px]! text-white"
-                        />
-                    </Button>
-                    <Button
-                        onClick={() => router.push("/")}
-                        className="h-[60px] w-[60px]"
-                    >
-                        <AudioWaveform className="h-[24px]! w-[24px]!" />
-                    </Button>
-                </div>
-
                 {/* Content Editor */}
                 <div className="flex h-screen w-full flex-col items-center justify-center">
-                    <div className="relative h-full w-full overflow-hidden py-[120px]">
+                    <div className="relative h-full w-full overflow-hidden pt-[120px]">
                         <ProgressiveBlur
                             position="top"
-                            // z-index="5"
                             height="200px"
                             className="fixed"
                         />
-                        <textarea
-                            value={content}
-                            onChange={handleContentChange}
-                            placeholder="Start typing your content..."
-                            className="h-full w-full resize-none border-red-500 bg-transparent px-6 py-20 font-mono focus:outline-none"
+                        <ContentEditor
+                            initialContent={content}
+                            placeholder="Start typing or use voice..."
+                            onContentChange={handleContentChange}
+                            className="h-full"
                         />
                     </div>
                 </div>
