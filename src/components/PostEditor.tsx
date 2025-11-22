@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Button } from "./ui/button";
 import { ArrowLeft, AudioWaveform, Smile } from "lucide-react";
 import { ProgressiveBlur } from "./ui/progressive-blur";
-import { transcode } from "buffer";
 
 interface Post {
     id: number;
