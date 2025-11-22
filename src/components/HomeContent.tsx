@@ -5,7 +5,7 @@ import Link from "next/link";
 import LogoutButton from "./LogoutButton";
 import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "./ui/button";
-import { Trash2, Plus, ExternalLinkIcon, ArrowUpRight } from "lucide-react";
+import { Trash2, Plus, ArrowUpRight } from "lucide-react";
 
 interface Post {
     id: number;
