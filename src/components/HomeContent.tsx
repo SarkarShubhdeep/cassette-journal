@@ -5,7 +5,7 @@ import Link from "next/link";
 import LogoutButton from "./LogoutButton";
 import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "./ui/button";
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Plus, ExternalLinkIcon, ArrowUpRight } from "lucide-react";
 
 interface Post {
     id: number;
@@ -112,36 +112,43 @@ export default function HomeContent({ user }: { user: User }) {
 
     return (
         <div className="min-h-screen p-8">
-            <div className="mx-auto max-w-6xl">
-                {/* Header */}
-                <div className="mb-12 flex items-center justify-between">
-                    <div>
-                        <h1 className="mb-2 text-4xl font-bold">
-                            Cassette Journal
-                        </h1>
-                        <p className="text-slate-400">
-                            Welcome, {dbUser?.name || user.name || user.email}
+            {/* fixed header */}
+            <div className="fixed top-0 right-0 left-0 z-50 mx-auto flex max-w-6xl flex-col items-center justify-between bg-slate-100/20 px-8 py-8 backdrop-blur-sm md:flex-row">
+                <div>
+                    <h1 className="mb-2 text-4xl font-bold">
+                        Cassette Journal
+                    </h1>
+                    <p className="text-slate-400">
+                        Welcome, {dbUser?.name || user.name || user.email}
+                    </p>
+                    {!dbUser?.name && (
+                        <p className="mt-1 text-xs text-amber-400">
+                            👤 No name set yet
                         </p>
-                        {!dbUser?.name && (
-                            <p className="mt-1 text-xs text-amber-400">
-                                👤 No name set yet
-                            </p>
-                        )}
-                    </div>
-                    <div className="flex gap-3">
-                        {/* Create New Button */}
-                        <Button
-                            onClick={handleCreateNew}
-                            className="flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700"
-                        >
-                            <Plus size={20} />
-                            New File
-                        </Button>
-                        <ThemeToggle />
-                        <LogoutButton />
-                    </div>
+                    )}
                 </div>
+                <div className="flex gap-3">
+                    <Button className="rounded-full">
+                        <ArrowUpRight size={20} />
+                        <Link href="/whisper-test" target="_blank">
+                            Test Ground
+                        </Link>
+                    </Button>
 
+                    {/* Create New Button */}
+                    <Button
+                        onClick={handleCreateNew}
+                        className="flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700"
+                    >
+                        <Plus size={20} />
+                        New File
+                    </Button>
+                    <ThemeToggle />
+                    <LogoutButton />
+                </div>
+            </div>
+            {/* </div> */}
+            <div className="mx-auto mt-30 max-w-6xl">
                 {/* Error Message */}
                 {error && (
                     <div className="mb-6 rounded-lg border border-red-500 bg-red-500/20 p-4 text-red-200">
