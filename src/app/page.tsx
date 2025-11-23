@@ -1,15 +1,12 @@
 import { auth0 } from "@/lib/auth0";
 import LoginButton from "@/components/LoginButton";
-// import LogoutButton from "@/components/LogoutButton";
 import HomeContent from "@/components/HomeContent";
 
-import BGImage from "../../public/assets/bg-temp.png";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default async function Home() {
     const session = await auth0.getSession();
@@ -34,9 +31,9 @@ export default async function Home() {
                     {/* Top right fixed buttons */}
                     <div className="fixed top-20 right-0 left-0 z-10 mx-auto flex max-w-6xl items-start justify-end gap-3">
                         <ThemeToggle />
-                        <div className="items-end gap-2">
+                        <div className="items-end space-y-2">
                             <Button disabled>Try it out</Button>
-                            <p className="text-muted-foreground text-sm">
+                            <p className="text-muted-foreground text-right text-sm">
                                 Coming soon
                             </p>
                         </div>
@@ -119,6 +116,72 @@ export default async function Home() {
                                     </Link>
                                 </div>
                             </div>
+                        </section>
+                        <section className="space-y-2 pt-20">
+                            <h3 className="font-semibold">
+                                Potential Features
+                            </h3>
+                            <ul className="text-muted-foreground list-inside">
+                                <li>
+                                    - cassette player UI, analog sound effects{" "}
+                                    <span className="text-muted-foreground"></span>
+                                </li>
+                                <li>- speech to text </li>
+                                <li>- transcribed speech will be editable </li>
+                                <li>- summarize recording</li>
+                                <li>- extract upcoming events </li>
+                                <li>- recognize any tasks</li>
+                                <li>- auto event scheduling/calendar sync</li>
+                            </ul>
+                        </section>
+
+                        <section className="space-y-2 pt-20">
+                            <h3 className="font-semibold">Tech Stack</h3>
+                            <ul className="text-muted-foreground list-inside">
+                                <li>- Next.js, Tailwind</li>
+                                <li>- Auth0</li>
+                                <li>- NeonDB</li>
+                                <li>- Drizzle ORM</li>
+                                <li>- OpenAI Whisper</li>
+                                <li>
+                                    - Windsurf, Claude Sonnet and Haiku, Gemini
+                                    3
+                                </li>
+                                <li>- Figma</li>
+                            </ul>
+                        </section>
+
+                        <section className="space-y-2 py-20">
+                            <h3 className="font-semibold">
+                                Why Cassette Journal?
+                            </h3>
+                            <p className="text-muted-foreground">
+                                Short answer... analog hits different. Ofcourse
+                                this is not a physical thing, but I wanted to
+                                create a native application with sounds, and all
+                                the haptic feedbacks we used to get on those old
+                                school cassette players. Not many recorded their
+                                thoughts on a cassette but a countless number of
+                                people, possibly we all at least at some point
+                                of out lives pick a pen and start writing in a
+                                diary.
+                            </p>
+                            <p className="text-muted-foreground">
+                                I personally don&apos;t do dear diary every
+                                night but I many times when I have to just dump
+                                my thoughts somewhere there&apos;s still nothing
+                                better than a journal notebook. There are tons
+                                of note taking apps out there and integrating AI
+                                capabilities in this application is I suppose
+                                the need of time.
+                            </p>
+                            <p className="text-muted-foreground">
+                                Check the TLDR; “A journal that talks back”.
+                            </p>
+                            <p className="text-muted-foreground">
+                                Hence Cassette Journal. I&apos;m not sure about
+                                the name though.
+                            </p>
                         </section>
                     </div>
                 </div>
