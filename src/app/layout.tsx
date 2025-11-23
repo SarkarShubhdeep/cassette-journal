@@ -2,6 +2,12 @@ import type { Metadata } from "next";
 import { Auth0Provider } from "@auth0/nextjs-auth0/client";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Geist } from "next/font/google";
+
+const font = Geist({
+    subsets: ["latin"],
+    variable: "--font-geist",
+});
 
 export const metadata: Metadata = {
     title: "Cassette Journal",
@@ -15,7 +21,7 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en" suppressHydrationWarning>
-            <body>
+            <body className={font.className}>
                 <Auth0Provider>
                     <ThemeProvider
                         attribute="class"

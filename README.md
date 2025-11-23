@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Cassette Journal
 
-## Getting Started
+A voice-first journal that uses AI to summarize your thoughts and extract key details like pending tasks and upcoming events. Turn your ramblings into a roadmap.
 
-First, run the development server:
+<!-- image -->
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+![image](current-landing-page.png)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## About
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Cassette Journal is an experimental project that combines journaling with voice-to-text transcription and AI-powered analysis. Record your thoughts, and let AI help you organize them into actionable insights, summaries, and scheduled events.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The name is inspired by the analog feel of cassette players—bringing nostalgic, tactile interactions to a modern journaling experience.
 
-## Learn More
+## Features
 
-To learn more about Next.js, take a look at the following resources:
+- **Voice Recording** - Record your thoughts directly in the app
+- **Speech-to-Text Transcription** - Powered by OpenAI Whisper for accurate transcription
+- **AI Summarization** - Automatic summaries of your recordings (3-5 bullet points)
+- **Task Extraction** - AI identifies and extracts action items from your voice notes
+- **Event Recognition** - Automatically detects upcoming events mentioned in your recordings
+- **Editable Transcripts** - Edit transcribed text before saving
+- **User Authentication** - Secure login with Auth0 and Google
+- **Dark Mode Support** - Full dark/light theme support
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Current Development Status
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Phase 0: Initial Setup ✅ DONE
 
-## Deploy on Vercel
+- Project setup with Next.js, NeonDB, DrizzleORM, and shadcn/ui
+- User authentication with Auth0
+- Basic UI for entry listing and individual note pages
+- Speech-to-text transcription with OpenAI Whisper
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Phase 1: AI Features 🚀 IN PROGRESS
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- LLM research and testing for core AI features
+- Prompt engineering for debrief summarization
+- Task and event extraction logic
+- Structured output display on note pages
+- Complete UI/UX flow implementation
+
+### Phase 2: UI/UX & Performance (Planned)
+
+- Final UI designs with 3D cassette aesthetic
+- Performance optimization and database query optimization
+- Consolidated view for all extracted tasks and events
+- Basic keyword search across transcripts
+
+## Tech Stack
+
+- **Frontend**: Next.js, React, Tailwind CSS, shadcn/ui
+- **Backend**: Next.js API Routes
+- **Database**: NeonDB (PostgreSQL), Drizzle ORM
+- **Authentication**: Auth0
+- **AI/ML**: OpenAI Whisper (transcription)
+- **Fonts**: Geist (Google Fonts)
+- **Development**: Windsurf, Claude Sonnet/Haiku, Gemini 3
