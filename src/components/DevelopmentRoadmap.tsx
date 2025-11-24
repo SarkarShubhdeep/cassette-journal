@@ -112,8 +112,8 @@ export function DevelopmentRoadmap() {
                     <div className="flex grow flex-col items-start justify-start space-y-2 sm:flex-row">
                         <div className="w-sm">
                             LLM Research & Testing
-                            <span className="ml-4 font-semibold text-yellow-600">
-                                IN PROGRESS
+                            <span className="ml-4 font-semibold text-green-600">
+                                DONE
                             </span>
                         </div>
                         <div className="flex-1">
@@ -126,8 +126,8 @@ export function DevelopmentRoadmap() {
                     <div className="flex grow flex-col items-start justify-start space-y-2 sm:flex-row">
                         <div className="w-sm">
                             Summarization and Extraction
-                            <span className="ml-4 font-semibold text-yellow-600">
-                                IN PROGRESS
+                            <span className="ml-4 font-semibold text-green-600">
+                                DONE
                             </span>
                         </div>
                         <div className="flex-1">
@@ -140,7 +140,12 @@ export function DevelopmentRoadmap() {
                         </div>
                     </div>
                     <div className="flex grow flex-col items-start justify-start space-y-2 sm:flex-row">
-                        <div className="w-sm">Output</div>
+                        <div className="w-sm">
+                            Output
+                            <span className="ml-4 font-semibold text-green-600">
+                                DONE
+                            </span>
+                        </div>
                         <div className="flex-1">
                             <p className="text-muted-foreground">
                                 Display the structured AI output (Summary,
@@ -150,16 +155,22 @@ export function DevelopmentRoadmap() {
                         </div>
                     </div>
                     <div className="flex grow flex-col items-start justify-start space-y-2 sm:flex-row">
-                        <div className="w-sm">UI/UX</div>
+                        <div className="w-sm">
+                            UI/UX and CRUD
+                            <span className="ml-4 font-semibold text-yellow-600">
+                                IN PROGRESS
+                            </span>
+                        </div>
                         <div className="flex-1">
                             <p className="text-muted-foreground">
-                                Implement the complete flow: Start Recording
+                                - Implement the complete flow: Start Recording
                                 <MoveRight className="mx-2 inline aspect-auto h-4 w-4" />
                                 Stop
                                 <MoveRight className="mx-2 inline aspect-auto h-4 w-4" />
                                 Processing Loader
                                 <MoveRight className="mx-2 inline aspect-auto h-4 w-4" />
                                 View Result.
+                                <br />- Implement the CRUD operations tasks.
                             </p>
                         </div>
                     </div>
@@ -188,9 +199,8 @@ export function DevelopmentRoadmap() {
                         </div>
                         <div className="flex-1">
                             <p className="text-muted-foreground">
-                                Implement the final UI designs (including the 3D
-                                cassette look). Focus on making the UI feel fast
-                                and reactive.
+                                Implement the final UI designs. Focus on making
+                                the UI feel fast and reactive.
                             </p>
                         </div>
                     </div>
