@@ -4,14 +4,14 @@ import { auth0 } from "@/lib/auth0";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
-// GET all posts for current user
+// GET all tapes for current user
 export async function GET() {
     try {
         const session = await auth0.getSession();
         if (!session?.user) {
             return NextResponse.json(
                 { success: false, error: "Unauthorized" },
-                { status: 401 }
+                { status: 401 },
             );
         }
 
@@ -25,29 +25,29 @@ export async function GET() {
             return NextResponse.json({ success: true, data: [] });
         }
 
-        const posts = await db
+        const tapes = await db
             .select()
             .from(postsTable)
             .where(eq(postsTable.userId, user[0].id));
 
-        return NextResponse.json({ success: true, data: posts });
+        return NextResponse.json({ success: true, data: tapes });
     } catch (error) {
-        console.error("Error fetching posts:", error);
+        console.error("Error fetching tapes:", error);
         return NextResponse.json(
-            { success: false, error: "Failed to fetch posts" },
-            { status: 500 }
+            { success: false, error: "Failed to fetch tapes" },
+            { status: 500 },
         );
     }
 }
 
-// POST create new post
+// POST create new tape
 export async function POST(request: NextRequest) {
     try {
         const session = await auth0.getSession();
         if (!session?.user) {
             return NextResponse.json(
                 { success: false, error: "Unauthorized" },
-                { status: 401 }
+                { status: 401 },
             );
         }
 
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
                     success: false,
                     error: "Title and content are required",
                 },
-                { status: 400 }
+                { status: 400 },
             );
         }
 
@@ -86,20 +86,20 @@ export async function POST(request: NextRequest) {
             userId = existingUser[0].id;
         }
 
-        const newPost = await db
+        const newTape = await db
             .insert(postsTable)
             .values({ title, content, userId })
             .returning();
 
         return NextResponse.json(
-            { success: true, data: newPost[0] },
-            { status: 201 }
+            { success: true, data: newTape[0] },
+            { status: 201 },
         );
     } catch (error) {
-        console.error("Error creating post:", error);
+        console.error("Error creating tape:", error);
         return NextResponse.json(
-            { success: false, error: "Failed to create post" },
-            { status: 500 }
+            { success: false, error: "Failed to create tape" },
+            { status: 500 },
         );
     }
 }
