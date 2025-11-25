@@ -3,9 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "./ui/button";
-import { ArrowLeft, Mic, Square } from "lucide-react";
-import { ProgressiveBlur } from "./ui/progressive-blur";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
+import TapeHeader from "./TapeHeader";
+import TapeControlBar from "./TapeControlBar";
+import TapeSummaryPanel from "./TapeSummaryPanel";
+import TapeTasksPanel from "./TapeTasksPanel";
 
 interface Tape {
     id: number;
@@ -135,6 +137,10 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
             setError("Error deleting tape");
             console.error(err);
         }
+    };
+
+    const handleShare = async () => {
+        if (!confirm("Are you sure you want to share this tape?")) return;
     };
 
     const handleStartRecording = async () => {
@@ -273,318 +279,76 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
 
     return (
         <div className="min-h-screen">
-            <div className="relative mx-auto flex h-full max-w-6xl flex-col items-center justify-center">
-                {/* Fixed Header */}
-                <div className="from-background to-background/0 fixed top-0 z-20 flex w-full max-w-6xl items-center justify-between bg-linear-to-b px-4 pt-8">
-                    <div className="flex flex-1">
-                        <Button
-                            onClick={() => router.push("/")}
-                            variant="ghost"
-                            className="flex items-center gap-2"
-                        >
-                            <ArrowLeft size={20} />
-                            Home
-                        </Button>
-                    </div>
-
-                    {/* Title Input */}
-                    <div className="flex flex-1 flex-col items-center text-center">
-                        <input
-                            type="text"
-                            value={title}
-                            onChange={handleTitleChange}
-                            placeholder="Tape title..."
-                            className="w-full text-center text-xl font-semibold focus:outline-none"
+            <div className="flex h-full w-full justify-center gap-3 overflow-hidden">
+                {/* Main Tape Area */}
+                <div className="relative flex h-screen max-w-6xl min-w-lg grow flex-col border-x">
+                    {/* Tape Header */}
+                    <div className="w-full">
+                        <TapeHeader
+                            title={title}
+                            onTitleChange={handleTitleChange}
+                            hasChanges={hasChanges}
+                            tape={tape}
+                            error={error}
+                            saving={saving}
+                            onSave={handleSave}
+                            onDelete={handleDelete}
+                            onShare={handleShare}
                         />
-                        {/* Save Status */}
-                        {hasChanges && (
-                            <div className="text-sm text-amber-400">
-                                You have unsaved changes
-                            </div>
-                        )}
-                        {/* Last modified */}
-                        <p className="text-muted-foreground text-sm">
-                            Last updated:{" "}
-                            {tape
-                                ? new Date(tape.updatedAt).toLocaleString()
-                                : "N/A"}
-                        </p>
                     </div>
 
-                    <div className="flex flex-1 justify-end gap-3">
-                        {error && (
-                            <div className="text-sm text-red-400">{error}</div>
-                        )}
-                        <Button
-                            onClick={handleDelete}
-                            variant="destructive"
-                            className="flex items-center gap-2"
-                        >
-                            Delete
-                        </Button>
-                        <Button
-                            onClick={handleSave}
-                            disabled={!hasChanges || saving}
-                            className="flex items-center gap-2"
-                        >
-                            {saving ? "Saving..." : "Save"}
-                        </Button>
-                    </div>
-                </div>
-
-                {/* Main Content Area */}
-                <div className="flex h-screen w-full flex-col items-center justify-center pt-20 pb-32">
-                    <div className="flex w-full flex-1 gap-6 overflow-hidden px-4">
+                    {/* Content Area */}
+                    <div className="flex w-full flex-1 grow gap-6 overflow-hidden pb-20">
                         {/* Textarea Container */}
-                        <div className="flex flex-1 flex-col gap-4 overflow-hidden">
-                            <div className="relative h-full w-full overflow-hidden">
-                                <ProgressiveBlur
-                                    position="top"
-                                    height="200px"
-                                    className="fixed"
-                                />
+                        <div className="flex w-full flex-1 flex-col gap-4 overflow-hidden">
+                            <div className="relative h-full w-full">
                                 <textarea
                                     ref={textareaRef}
                                     value={content}
                                     onChange={handleContentChange}
                                     placeholder="Start recording or typing your tape content..."
-                                    className="h-full w-full resize-none border-red-500 bg-transparent px-6 py-20 font-mono focus:outline-none"
+                                    className="h-full w-full resize-none bg-transparent px-4 py-16 font-mono focus:outline-none"
                                 />
                             </div>
                         </div>
+                    </div>
 
-                        {/* Summary Panel */}
-                        {showSummary &&
-                            (summary || isSummarizing || summaryError) && (
-                                <div className="border-border bg-muted flex w-80 flex-col gap-4 overflow-hidden rounded-lg border p-4">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="text-foreground font-semibold">
-                                            Summary
-                                        </h3>
-                                        <button
-                                            onClick={() =>
-                                                setShowSummary(false)
-                                            }
-                                            className="text-muted-foreground hover:text-foreground"
-                                        >
-                                            ✕
-                                        </button>
-                                    </div>
-
-                                    {isSummarizing && (
-                                        <div className="flex items-center gap-2">
-                                            <div className="h-3 w-3 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
-                                            <span className="text-sm text-blue-500">
-                                                Generating summary...
-                                            </span>
-                                        </div>
-                                    )}
-
-                                    {summaryError && (
-                                        <div className="rounded-lg bg-red-500/20 p-3">
-                                            <p className="text-sm text-red-500">
-                                                {summaryError}
-                                            </p>
-                                        </div>
-                                    )}
-
-                                    {summary && (
-                                        <div className="flex-1 overflow-auto">
-                                            <p className="text-foreground text-sm whitespace-pre-wrap">
-                                                {summary}
-                                            </p>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                        {/* Tasks Panel */}
-                        {showTasks &&
-                            (tasks.length > 0 ||
-                                isExtractingTasks ||
-                                tasksError) && (
-                                <div className="border-border bg-muted flex w-80 flex-col gap-4 overflow-hidden rounded-lg border p-4">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="text-foreground font-semibold">
-                                            Tasks
-                                        </h3>
-                                        <button
-                                            onClick={() => setShowTasks(false)}
-                                            className="text-muted-foreground hover:text-foreground"
-                                        >
-                                            ✕
-                                        </button>
-                                    </div>
-
-                                    {isExtractingTasks && (
-                                        <div className="flex items-center gap-2">
-                                            <div className="h-3 w-3 animate-spin rounded-full border-2 border-green-500 border-t-transparent" />
-                                            <span className="text-sm text-green-500">
-                                                Extracting tasks...
-                                            </span>
-                                        </div>
-                                    )}
-
-                                    {tasksError && (
-                                        <div className="rounded-lg bg-red-500/20 p-3">
-                                            <p className="text-sm text-red-500">
-                                                {tasksError}
-                                            </p>
-                                        </div>
-                                    )}
-
-                                    {tasks.length > 0 && (
-                                        <div className="flex-1 space-y-2 overflow-auto">
-                                            {tasks.map((task, index) => (
-                                                <div
-                                                    key={index}
-                                                    className="bg-background hover:bg-accent/50 flex cursor-pointer flex-col gap-1 rounded-lg p-2 transition-colors"
-                                                    onClick={() =>
-                                                        toggleTaskCompletion(
-                                                            index,
-                                                        )
-                                                    }
-                                                >
-                                                    <div className="flex items-start gap-3">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={completedTasks.has(
-                                                                index,
-                                                            )}
-                                                            onChange={() =>
-                                                                toggleTaskCompletion(
-                                                                    index,
-                                                                )
-                                                            }
-                                                            className="mt-1"
-                                                        />
-                                                        <span
-                                                            className={`flex-1 text-sm ${
-                                                                completedTasks.has(
-                                                                    index,
-                                                                )
-                                                                    ? "text-muted-foreground line-through"
-                                                                    : "text-foreground"
-                                                            }`}
-                                                        >
-                                                            {task.task}
-                                                        </span>
-                                                    </div>
-                                                    {(task.time ||
-                                                        task.startTime ||
-                                                        task.endTime) && (
-                                                        <div className="ml-7 flex items-center gap-2">
-                                                            {task.time && (
-                                                                <span className="text-xs font-semibold text-blue-500">
-                                                                    {task.time}
-                                                                </span>
-                                                            )}
-                                                            {task.startTime && (
-                                                                <span className="text-xs text-blue-500">
-                                                                    {
-                                                                        task.startTime
-                                                                    }
-                                                                    {task.endTime &&
-                                                                        ` - ${task.endTime}`}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
+                    {/* Tape Control Bar - Fixed at bottom */}
+                    <div className="absolute bottom-0 w-full">
+                        <TapeControlBar
+                            isRecording={isRecording}
+                            isProcessing={isProcessing}
+                            recordingError={recordingError}
+                            isSummarizing={isSummarizing}
+                            isExtractingTasks={isExtractingTasks}
+                            transcribedText={transcribedText}
+                            onStartRecording={handleStartRecording}
+                            onStopRecording={handleStopRecording}
+                            onSummarize={handleSummarize}
+                            onExtractTasks={handleExtractTasks}
+                        />
                     </div>
                 </div>
 
-                {/* Fixed Bottom Control Bar */}
-                <div className="border-border bg-background/95 fixed bottom-0 z-20 flex w-full max-w-6xl flex-col gap-4 border-t px-4 py-6">
-                    {/* Status Display */}
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            {isRecording && (
-                                <div className="flex items-center gap-2">
-                                    <div className="h-3 w-3 animate-pulse rounded-full bg-red-500" />
-                                    <span className="text-sm font-medium text-red-500">
-                                        Recording...
-                                    </span>
-                                </div>
-                            )}
+                {/* Summary Panel */}
+                <TapeSummaryPanel
+                    isOpen={showSummary}
+                    onClose={() => setShowSummary(false)}
+                    summary={summary}
+                    isSummarizing={isSummarizing}
+                    summaryError={summaryError}
+                />
 
-                            {isProcessing && (
-                                <div className="flex items-center gap-2">
-                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
-                                    <span className="text-sm font-medium text-blue-500">
-                                        Processing...
-                                    </span>
-                                </div>
-                            )}
-                            {recordingError && (
-                                <span className="text-sm font-medium text-red-500">
-                                    Error: {recordingError}
-                                </span>
-                            )}
-                            {!isRecording &&
-                                !isProcessing &&
-                                !recordingError && (
-                                    <span className="text-muted-foreground text-sm">
-                                        Ready
-                                    </span>
-                                )}
-                        </div>
-                    </div>
-
-                    {/* Control Buttons */}
-                    <div className="flex gap-3">
-                        <Button
-                            onClick={
-                                isRecording
-                                    ? handleStopRecording
-                                    : handleStartRecording
-                            }
-                            className="flex items-center gap-2"
-                        >
-                            {isRecording ? (
-                                <Square size={20} />
-                            ) : (
-                                <Mic size={20} />
-                            )}
-                            {isRecording
-                                ? "Stop and Transcribe"
-                                : "Start Recording"}
-                        </Button>
-                        <Button
-                            onClick={handleSummarize}
-                            disabled={isSummarizing || isRecording}
-                            variant="outline"
-                        >
-                            {isSummarizing ? "Summarizing..." : "Summarize"}
-                        </Button>
-                        <Button
-                            onClick={handleExtractTasks}
-                            disabled={isExtractingTasks || isRecording}
-                            variant="outline"
-                        >
-                            {isExtractingTasks
-                                ? "Extracting..."
-                                : "Extract Tasks"}
-                        </Button>
-                    </div>
-
-                    {/* Last Transcription */}
-                    {transcribedText && (
-                        <div className="border-border bg-muted rounded-lg border p-3">
-                            <p className="text-muted-foreground text-xs font-medium">
-                                Last Transcription:
-                            </p>
-                            <p className="text-foreground mt-1 text-sm">
-                                {transcribedText}
-                            </p>
-                        </div>
-                    )}
-                </div>
+                {/* Tasks Panel */}
+                <TapeTasksPanel
+                    isOpen={showTasks}
+                    onClose={() => setShowTasks(false)}
+                    tasks={tasks}
+                    isExtractingTasks={isExtractingTasks}
+                    tasksError={tasksError}
+                    completedTasks={completedTasks}
+                    onToggleTask={toggleTaskCompletion}
+                />
             </div>
         </div>
     );
