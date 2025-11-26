@@ -55,7 +55,7 @@ export default function TapeHeader({
                     value={title}
                     onChange={onTitleChange}
                     placeholder="Tape title..."
-                    className="w-full text-center text-xl font-semibold focus:outline-none"
+                    className="w-full text-center font-mono text-xl font-bold focus:outline-none"
                 />
                 {/* Save Status */}
                 {hasChanges && (
@@ -84,6 +84,9 @@ export default function TapeHeader({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={onShare}>
+                            Dark Mode
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={onShare}>
                             Share
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={onDelete}>
@@ -93,6 +96,7 @@ export default function TapeHeader({
                 </DropdownMenu>
                 <Button
                     onClick={onSave}
+                    variant="ghost"
                     disabled={!hasChanges || saving}
                     className="flex items-center gap-2"
                 >

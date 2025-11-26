@@ -44,7 +44,7 @@ export default function TapeControlBar({
                         {isRecording && (
                             <div className="flex items-center gap-2">
                                 <div className="h-3 w-3 animate-pulse rounded-full bg-red-500" />
-                                <span className="text-sm font-medium text-red-500">
+                                <span className="text-sm font-bold text-red-500">
                                     Recording...
                                 </span>
                             </div>
@@ -53,13 +53,13 @@ export default function TapeControlBar({
                         {isProcessing && (
                             <div className="flex items-center gap-2">
                                 <div className="h-3 w-3 animate-spin rounded-full" />
-                                <span className="text-sm font-medium text-blue-500">
+                                <span className="text-sm font-bold text-blue-500">
                                     Processing...
                                 </span>
                             </div>
                         )}
                         {recordingError && (
-                            <span className="text-sm font-medium text-red-500">
+                            <span className="text-sm font-bold text-red-500">
                                 Error: {recordingError}
                             </span>
                         )}

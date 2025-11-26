@@ -56,9 +56,6 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [isExtractingTasks, setIsExtractingTasks] = useState(false);
     const [tasksError, setTasksError] = useState<string | null>(null);
-    const [completedTasks, setCompletedTasks] = useState<Set<number>>(
-        new Set(),
-    );
 
     // UI state
     const [showSummary, setShowSummary] = useState(false);
@@ -214,13 +211,13 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
 
         if (!currentText || currentText.trim().length === 0) {
             setTasksError("Please enter some text to extract tasks");
+            setShowTasks(true);
             return;
         }
 
         setIsExtractingTasks(true);
         setTasksError(null);
         setTasks([]);
-        setCompletedTasks(new Set());
         setShowTasks(true);
 
         try {
@@ -231,29 +228,41 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
             });
 
             if (!response.ok) {
-                const error = await response.json();
-                setTasksError(error.error || "Failed to extract tasks");
+                let errorMessage = "Failed to extract tasks";
+                try {
+                    const error = await response.json();
+                    errorMessage = error.error || errorMessage;
+                } catch {
+                    // Response wasn't JSON
+                }
+                setTasksError(errorMessage);
                 return;
             }
 
             const data = await response.json();
+
+            // Validate response has tasks array
+            if (!data.tasks || !Array.isArray(data.tasks)) {
+                setTasksError("Invalid response from server");
+                return;
+            }
+
+            if (data.tasks.length === 0) {
+                setTasksError("No tasks found in the text");
+                return;
+            }
+
             setTasks(data.tasks);
         } catch (error) {
             console.error("Task extraction error:", error);
-            setTasksError("An error occurred while extracting tasks");
+            if (error instanceof Error) {
+                setTasksError(`Error: ${error.message}`);
+            } else {
+                setTasksError("An error occurred while extracting tasks");
+            }
         } finally {
             setIsExtractingTasks(false);
         }
-    };
-
-    const toggleTaskCompletion = (index: number) => {
-        const newCompleted = new Set(completedTasks);
-        if (newCompleted.has(index)) {
-            newCompleted.delete(index);
-        } else {
-            newCompleted.add(index);
-        }
-        setCompletedTasks(newCompleted);
     };
 
     if (loading) {
@@ -334,6 +343,7 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
                 <TapeSummaryPanel
                     isOpen={showSummary}
                     onClose={() => setShowSummary(false)}
+                    onSummarize={handleSummarize}
                     summary={summary}
                     isSummarizing={isSummarizing}
                     summaryError={summaryError}
@@ -343,11 +353,10 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
                 <TapeTasksPanel
                     isOpen={showTasks}
                     onClose={() => setShowTasks(false)}
+                    onExtractTasks={handleExtractTasks}
                     tasks={tasks}
                     isExtractingTasks={isExtractingTasks}
                     tasksError={tasksError}
-                    completedTasks={completedTasks}
-                    onToggleTask={toggleTaskCompletion}
                 />
             </div>
         </div>

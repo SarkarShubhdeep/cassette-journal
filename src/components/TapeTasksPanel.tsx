@@ -1,6 +1,12 @@
 "use client";
 
-interface Task {
+import { useState, useEffect } from "react";
+import { Reorder } from "framer-motion";
+import TaskItem, { TaskItemData } from "./TaskItem";
+import { Button } from "./ui/button";
+import { RotateCcw, Share, X } from "lucide-react";
+
+interface ExtractedTask {
     task: string;
     time: string | null;
     startTime: string | null;
@@ -10,43 +16,101 @@ interface Task {
 interface TapeTasksPanelProps {
     isOpen: boolean;
     onClose: () => void;
-    tasks: Task[];
+    onExtractTasks: () => void;
+    tasks: ExtractedTask[];
     isExtractingTasks: boolean;
     tasksError: string | null;
-    completedTasks: Set<number>;
-    onToggleTask: (index: number) => void;
+}
+
+// Convert extracted tasks to TaskItemData format
+function convertToTaskItems(extractedTasks: ExtractedTask[]): TaskItemData[] {
+    return extractedTasks.map((task, index) => ({
+        id: `task-${index}-${task.task.slice(0, 20)}`,
+        text: task.task,
+        completed: false,
+        time: task.time || undefined,
+    }));
 }
 
 export default function TapeTasksPanel({
     isOpen,
     onClose,
-    tasks,
+    onExtractTasks,
+    tasks: extractedTasks,
     isExtractingTasks,
     tasksError,
-    completedTasks,
-    onToggleTask,
 }: TapeTasksPanelProps) {
-    if (!isOpen || (!tasks.length && !isExtractingTasks && !tasksError)) {
+    const [tasks, setTasks] = useState<TaskItemData[]>([]);
+
+    // Convert extracted tasks when they change
+    const extractedTasksJson = JSON.stringify(extractedTasks);
+    useEffect(() => {
+        if (extractedTasks.length > 0) {
+            setTasks(convertToTaskItems(extractedTasks));
+        } else {
+            setTasks([]);
+        }
+    }, [extractedTasksJson, extractedTasks]);
+
+    // Show panel if open AND (has tasks OR is loading OR has error)
+    if (!isOpen) {
         return null;
     }
+
+    const hasContent =
+        tasks.length > 0 ||
+        extractedTasks.length > 0 ||
+        isExtractingTasks ||
+        tasksError;
+    if (!hasContent) {
+        return null;
+    }
+
+    const toggleTask = (id: string) => {
+        setTasks(
+            tasks.map((task) =>
+                task.id === id ? { ...task, completed: !task.completed } : task,
+            ),
+        );
+    };
+
+    const updateText = (id: string, newText: string) => {
+        setTasks(
+            tasks.map((task) =>
+                task.id === id ? { ...task, text: newText } : task,
+            ),
+        );
+    };
+
+    const updateTime = (id: string, newTime: string) => {
+        setTasks(
+            tasks.map((task) =>
+                task.id === id ? { ...task, time: newTime } : task,
+            ),
+        );
+    };
 
     return (
         <div className="relative flex h-screen max-w-2xl min-w-lg flex-col overflow-hidden border-x">
             {/* Fixed Header */}
             <div className="bg-background flex h-24 w-full items-center justify-between border-b px-4 backdrop-blur">
-                <div className="flex flex-1"></div>
-
-                <div className="flex flex-1 flex-col items-center text-center">
-                    <h3 className="text-xl font-semibold">Tasks</h3>
-                </div>
-
-                <div className="flex flex-1 justify-end">
-                    <button
-                        onClick={onClose}
-                        className="text-muted-foreground hover:text-foreground text-2xl"
+                <h3 className="text-xl font-medium text-blue-400 dark:text-blue-300">
+                    TASKS
+                </h3>
+                <div className="flex flex-1 justify-end gap-2">
+                    <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={onExtractTasks}
                     >
-                        ✕
-                    </button>
+                        <RotateCcw />
+                    </Button>
+                    <Button size="icon" variant="ghost" disabled>
+                        <Share />
+                    </Button>
+                    <Button size="icon" variant="outline" onClick={onClose}>
+                        <X />
+                    </Button>
                 </div>
             </div>
 
@@ -55,7 +119,7 @@ export default function TapeTasksPanel({
                 {isExtractingTasks && (
                     <div className="flex items-center gap-2">
                         <div className="h-3 w-3 animate-spin rounded-full border-2 border-green-500 border-t-transparent" />
-                        <span className="text-sm text-green-500">
+                        <span className="text-sm text-blue-500">
                             Extracting tasks...
                         </span>
                     </div>
@@ -68,51 +132,26 @@ export default function TapeTasksPanel({
                 )}
 
                 {tasks.length > 0 && (
-                    <div className="flex-1 space-y-2">
-                        {tasks.map((task, index) => (
-                            <div
-                                key={index}
-                                className="bg-background hover:bg-accent/50 flex cursor-pointer flex-col gap-1 rounded-lg border p-2 transition-colors"
-                                onClick={() => onToggleTask(index)}
-                            >
-                                <div className="flex items-start gap-3">
-                                    <input
-                                        type="checkbox"
-                                        checked={completedTasks.has(index)}
-                                        onChange={() => onToggleTask(index)}
-                                        className="mt-1"
-                                    />
-                                    <span
-                                        className={`flex-1 text-sm ${
-                                            completedTasks.has(index)
-                                                ? "text-muted-foreground line-through"
-                                                : "text-foreground"
-                                        }`}
-                                    >
-                                        {task.task}
-                                    </span>
-                                </div>
-                                {(task.time ||
-                                    task.startTime ||
-                                    task.endTime) && (
-                                    <div className="ml-7 flex items-center gap-2">
-                                        {task.time && (
-                                            <span className="text-xs font-semibold text-blue-500">
-                                                {task.time}
-                                            </span>
-                                        )}
-                                        {task.startTime && (
-                                            <span className="text-xs text-blue-500">
-                                                {task.startTime}
-                                                {task.endTime &&
-                                                    ` - ${task.endTime}`}
-                                            </span>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
+                    <Reorder.Group
+                        axis="y"
+                        values={tasks}
+                        onReorder={setTasks}
+                        className="space-y-2"
+                    >
+                        {tasks.map((task) => (
+                            <TaskItem
+                                key={task.id}
+                                task={task}
+                                onToggleComplete={() => toggleTask(task.id)}
+                                onUpdateText={(newText) =>
+                                    updateText(task.id, newText)
+                                }
+                                onUpdateTime={(newTime) =>
+                                    updateTime(task.id, newTime)
+                                }
+                            />
                         ))}
-                    </div>
+                    </Reorder.Group>
                 )}
             </div>
         </div>
