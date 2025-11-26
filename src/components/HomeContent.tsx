@@ -7,7 +7,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "./ui/button";
 import { Trash2, Plus, ArrowUpRight } from "lucide-react";
 
-interface Post {
+interface Tape {
     id: number;
     title: string;
     content: string;
@@ -29,14 +29,14 @@ interface DbUser {
 }
 
 export default function HomeContent({ user }: { user: User }) {
-    const [posts, setPosts] = useState<Post[]>([]);
+    const [tapes, setTapes] = useState<Tape[]>([]);
     const [dbUser, setDbUser] = useState<DbUser | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         fetchUserProfile();
-        fetchPosts();
+        fetchTapes();
     }, []);
 
     const fetchUserProfile = async () => {
@@ -51,46 +51,46 @@ export default function HomeContent({ user }: { user: User }) {
         }
     };
 
-    const fetchPosts = async () => {
+    const fetchTapes = async () => {
         try {
             setLoading(true);
-            const response = await fetch("/api/posts");
+            const response = await fetch("/api/tapes");
             const data = await response.json();
             if (data.success) {
-                setPosts(data.data);
+                setTapes(data.data);
             } else {
-                setError("Failed to fetch posts");
+                setError("Failed to fetch tapes");
             }
         } catch (err) {
-            setError("Error fetching posts");
+            setError("Error fetching tapes");
             console.error(err);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleDelete = async (postId: number) => {
-        if (!confirm("Are you sure you want to delete this file?")) return;
+    const handleDelete = async (tapeId: number) => {
+        if (!confirm("Are you sure you want to delete this tape?")) return;
 
         try {
-            const response = await fetch(`/api/posts/${postId}`, {
+            const response = await fetch(`/api/tapes/${tapeId}`, {
                 method: "DELETE",
             });
             const data = await response.json();
             if (data.success) {
-                setPosts(posts.filter((p) => p.id !== postId));
+                setTapes(tapes.filter((t) => t.id !== tapeId));
             } else {
-                setError("Failed to delete post");
+                setError("Failed to delete tape");
             }
         } catch (err) {
-            setError("Error deleting post");
+            setError("Error deleting tape");
             console.error(err);
         }
     };
 
     const handleCreateNew = async () => {
         try {
-            const response = await fetch("/api/posts", {
+            const response = await fetch("/api/tapes", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -100,13 +100,13 @@ export default function HomeContent({ user }: { user: User }) {
             });
             const data = await response.json();
             if (data.success) {
-                setPosts([...posts, data.data]);
+                setTapes([...tapes, data.data]);
             } else {
-                setError(data.error || "Failed to create post");
+                setError(data.error || "Failed to create tape");
             }
         } catch (err) {
-            setError("Error creating post");
-            console.error("Error creating post:", err);
+            setError("Error creating tape");
+            console.error("Error creating tape:", err);
         }
     };
 
@@ -141,7 +141,7 @@ export default function HomeContent({ user }: { user: User }) {
                         className="flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700"
                     >
                         <Plus size={20} />
-                        New File
+                        New Tape
                     </Button>
                     <ThemeToggle />
                     <LogoutButton />
@@ -159,40 +159,40 @@ export default function HomeContent({ user }: { user: User }) {
                 {/* Loading State */}
                 {loading && (
                     <div className="py-12 text-center">
-                        <p className="text-slate-400">Loading your files...</p>
+                        <p className="text-slate-400">Loading your tapes...</p>
                     </div>
                 )}
 
-                {/* Posts List */}
-                {!loading && posts.length === 0 && (
+                {/* Tapes List */}
+                {!loading && tapes.length === 0 && (
                     <div className="py-12 text-center">
                         <p className="mb-4">
-                            No files yet. Create your first one!
+                            No tapes yet. Create your first one!
                         </p>
                     </div>
                 )}
 
-                {!loading && posts.length > 0 && (
+                {!loading && tapes.length > 0 && (
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-                        {posts.map((post) => (
-                            <Link key={post.id} href={`/posts/${post.id}`}>
+                        {tapes.map((tape) => (
+                            <Link key={tape.id} href={`/tapes/${tape.id}`}>
                                 <div className="ark:hover:bg-slate-700 dark:bg-card flex h-full cursor-pointer flex-col bg-gray-100 p-6 transition-all duration-200 hover:bg-slate-300 dark:hover:bg-slate-800">
                                     <h3 className="mb-2 line-clamp-2 text-lg font-semibold transition-colors">
-                                        {post.title}
+                                        {tape.title}
                                     </h3>
                                     <p className="text-muted-foreground mb-4 line-clamp-2 grow text-sm">
-                                        {post.content || "No content yet..."}
+                                        {tape.content || "No content yet..."}
                                     </p>
                                     <div className="flex items-center justify-between border-t border-slate-600 pt-4">
                                         <span className="text-xs">
                                             {new Date(
-                                                post.updatedAt,
+                                                tape.updatedAt,
                                             ).toLocaleDateString()}
                                         </span>
                                         <button
                                             onClick={(e) => {
                                                 e.preventDefault();
-                                                handleDelete(post.id);
+                                                handleDelete(tape.id);
                                             }}
                                             className="transition-colors hover:text-red-400"
                                         >

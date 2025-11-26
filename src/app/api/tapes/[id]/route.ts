@@ -4,80 +4,80 @@ import { auth0 } from "@/lib/auth0";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
-// Helper function to verify user owns the post
-async function verifyPostOwnership(postId: number, userEmail: string) {
-    const post = await db
+// Helper function to verify user owns the tape
+async function verifyTapeOwnership(tapeId: number, userEmail: string) {
+    const tape = await db
         .select()
         .from(postsTable)
-        .where(eq(postsTable.id, postId));
+        .where(eq(postsTable.id, tapeId));
 
-    if (post.length === 0) {
+    if (tape.length === 0) {
         return null;
     }
 
     const user = await db
         .select()
         .from(usersTable)
-        .where(eq(usersTable.id, post[0].userId));
+        .where(eq(usersTable.id, tape[0].userId));
 
     if (user.length === 0 || user[0].email !== userEmail) {
         return null;
     }
 
-    return post[0];
+    return tape[0];
 }
 
-// GET single post
+// GET single tape
 export async function GET(
     request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: Promise<{ id: string }> },
 ) {
     try {
         const session = await auth0.getSession();
         if (!session?.user) {
             return NextResponse.json(
                 { success: false, error: "Unauthorized" },
-                { status: 401 }
+                { status: 401 },
             );
         }
 
         const { id } = await params;
-        const postId = parseInt(id);
-        const post = await verifyPostOwnership(postId, session.user.email!);
+        const tapeId = parseInt(id);
+        const tape = await verifyTapeOwnership(tapeId, session.user.email!);
 
-        if (!post) {
+        if (!tape) {
             return NextResponse.json(
-                { success: false, error: "Post not found or unauthorized" },
-                { status: 404 }
+                { success: false, error: "Tape not found or unauthorized" },
+                { status: 404 },
             );
         }
 
-        return NextResponse.json({ success: true, data: post });
+        return NextResponse.json({ success: true, data: tape });
     } catch (error) {
-        console.error("Error fetching post:", error);
+        console.error("Error fetching tape:", error);
         return NextResponse.json(
-            { success: false, error: "Failed to fetch post" },
-            { status: 500 }
+            { success: false, error: "Failed to fetch tape" },
+            { status: 500 },
         );
     }
 }
 
-// PUT update post
+// PUT update tape
 export async function PUT(
     request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: Promise<{ id: string }> },
 ) {
     try {
         const session = await auth0.getSession();
         if (!session?.user) {
             return NextResponse.json(
                 { success: false, error: "Unauthorized" },
-                { status: 401 }
+                { status: 401 },
             );
         }
 
         const { id } = await params;
-        const postId = parseInt(id);
+        const tapeId = parseInt(id);
         const body = await request.json();
         const { title, content } = body;
 
@@ -87,78 +87,78 @@ export async function PUT(
                     success: false,
                     error: "Title and content are required",
                 },
-                { status: 400 }
+                { status: 400 },
             );
         }
 
         // Verify ownership before updating
-        const existingPost = await verifyPostOwnership(
-            postId,
-            session.user.email!
+        const existingTape = await verifyTapeOwnership(
+            tapeId,
+            session.user.email!,
         );
-        if (!existingPost) {
+        if (!existingTape) {
             return NextResponse.json(
-                { success: false, error: "Post not found or unauthorized" },
-                { status: 404 }
+                { success: false, error: "Tape not found or unauthorized" },
+                { status: 404 },
             );
         }
 
-        const updatedPost = await db
+        const updatedTape = await db
             .update(postsTable)
             .set({ title, content })
-            .where(eq(postsTable.id, postId))
+            .where(eq(postsTable.id, tapeId))
             .returning();
 
-        return NextResponse.json({ success: true, data: updatedPost[0] });
+        return NextResponse.json({ success: true, data: updatedTape[0] });
     } catch (error) {
-        console.error("Error updating post:", error);
+        console.error("Error updating tape:", error);
         return NextResponse.json(
-            { success: false, error: "Failed to update post" },
-            { status: 500 }
+            { success: false, error: "Failed to update tape" },
+            { status: 500 },
         );
     }
 }
 
-// DELETE post
+// DELETE tape
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: Promise<{ id: string }> },
 ) {
     try {
         const session = await auth0.getSession();
         if (!session?.user) {
             return NextResponse.json(
                 { success: false, error: "Unauthorized" },
-                { status: 401 }
+                { status: 401 },
             );
         }
 
         const { id } = await params;
-        const postId = parseInt(id);
+        const tapeId = parseInt(id);
 
         // Verify ownership before deleting
-        const existingPost = await verifyPostOwnership(
-            postId,
-            session.user.email!
+        const existingTape = await verifyTapeOwnership(
+            tapeId,
+            session.user.email!,
         );
-        if (!existingPost) {
+        if (!existingTape) {
             return NextResponse.json(
-                { success: false, error: "Post not found or unauthorized" },
-                { status: 404 }
+                { success: false, error: "Tape not found or unauthorized" },
+                { status: 404 },
             );
         }
 
-        const deletedPost = await db
+        const deletedTape = await db
             .delete(postsTable)
-            .where(eq(postsTable.id, postId))
+            .where(eq(postsTable.id, tapeId))
             .returning();
 
-        return NextResponse.json({ success: true, data: deletedPost[0] });
+        return NextResponse.json({ success: true, data: deletedTape[0] });
     } catch (error) {
-        console.error("Error deleting post:", error);
+        console.error("Error deleting tape:", error);
         return NextResponse.json(
-            { success: false, error: "Failed to delete post" },
-            { status: 500 }
+            { success: false, error: "Failed to delete tape" },
+            { status: 500 },
         );
     }
 }

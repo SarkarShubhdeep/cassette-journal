@@ -38,26 +38,23 @@ export async function POST(request: NextRequest) {
 EXTRACTION RULES:
 - Extract ONLY tasks and events that are today or in the future
 - EXCLUDE any past events/tasks mentioned
-- Tasks can have optional time/time ranges
 - For each item, identify:
   1. Task/event description
-  2. Time information (use relative timing like "today", "tomorrow", "next Monday", etc.)
-  3. If it's a time range (e.g., "2 PM to 3:30 PM"), extract both start and end times
-  4. If it's a whole day item (e.g., "today is Raji's birthday"), mark as "today" or the specific day
-  5. If no specific time is mentioned, use null for times
+  2. Time when the task/event starts (use ISO 8601 format: YYYY-MM-DDTHH:MM:SS or null if no specific time)
+  3. If no specific time is mentioned, use null
 - Ensure no duplicates - if the same task/event appears multiple times, include it only once
 
 Return ONLY a JSON array of objects with this structure:
 [
   {
     "task": "Task or event description",
-    "time": "relative timing (e.g., 'today', 'tomorrow', 'next Monday') or null",
-    "startTime": "HH:MM AM/PM or null if not applicable",
-    "endTime": "HH:MM AM/PM or null if not applicable"
+    "time": "ISO 8601 timestamp (YYYY-MM-DDTHH:MM:SS) or null if no specific time",
+    "startTime": null,
+    "endTime": null
   }
 ]
 
-Example input: "I need to fix the login bug and send the report to Sarah by EOD. Tomorrow I have HCI lecture from 2 PM to 3:30 PM. Also, today is Raji's birthday. I went to the gym yesterday."
+Example input: "I need to fix the login bug and send the report to Sarah by 5 PM today. Tomorrow I have HCI lecture at 2 PM. Also, today is Raji's birthday. I went to the gym yesterday."
 Example output: [
   {
     "task": "Fix the login bug",
@@ -67,19 +64,19 @@ Example output: [
   },
   {
     "task": "Send report to Sarah",
-    "time": "today",
+    "time": "2024-01-15T17:00:00",
     "startTime": null,
     "endTime": null
   },
   {
     "task": "HCI lecture",
-    "time": "tomorrow",
-    "startTime": "2:00 PM",
-    "endTime": "3:30 PM"
+    "time": "2024-01-16T14:00:00",
+    "startTime": null,
+    "endTime": null
   },
   {
     "task": "Raji's birthday",
-    "time": "today",
+    "time": null,
     "startTime": null,
     "endTime": null
   }
