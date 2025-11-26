@@ -113,7 +113,7 @@ export default function HomeContent({ user }: { user: User }) {
     return (
         <div className="min-h-screen p-8">
             {/* fixed header */}
-            <div className="fixed top-0 right-0 left-0 z-50 mx-auto flex max-w-6xl flex-col items-center justify-between bg-slate-100/20 px-8 py-8 backdrop-blur-sm md:flex-row">
+            <div className="fixed top-0 right-0 left-0 z-50 mx-auto flex max-w-6xl flex-col items-center justify-between bg-slate-100/20 px-8 py-8 backdrop-blur-sm md:flex-row dark:bg-slate-900/20">
                 <div>
                     <h1 className="mb-2 text-4xl font-bold">
                         Cassette Journal
@@ -176,7 +176,7 @@ export default function HomeContent({ user }: { user: User }) {
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
                         {tapes.map((tape) => (
                             <Link key={tape.id} href={`/tapes/${tape.id}`}>
-                                <div className="ark:hover:bg-slate-700 dark:bg-card flex h-full cursor-pointer flex-col bg-gray-100 p-6 transition-all duration-200 hover:bg-slate-300 dark:hover:bg-slate-800">
+                                <div className="dark:bg-card flex h-full cursor-pointer flex-col bg-gray-100 p-6 transition-all duration-200 hover:bg-slate-300 dark:hover:bg-gray-800">
                                     <h3 className="mb-2 line-clamp-2 text-lg font-semibold transition-colors">
                                         {tape.title}
                                     </h3>

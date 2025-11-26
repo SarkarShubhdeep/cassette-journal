@@ -8,16 +8,25 @@ import TapeHeader from "./TapeHeader";
 import TapeControlBar from "./TapeControlBar";
 import TapeSummaryPanel from "./TapeSummaryPanel";
 import TapeTasksPanel from "./TapeTasksPanel";
+import { TaskItemData } from "./TaskItem";
 
 interface Tape {
     id: number;
     title: string;
     content: string;
+    summary?: string | null;
+    tasks?: Array<{
+        id: number;
+        text: string;
+        completed: boolean;
+        time: string | null;
+        sortOrder: number;
+    }>;
     createdAt: string;
     updatedAt: string;
 }
 
-interface Task {
+interface ExtractedTask {
     task: string;
     time: string | null;
     startTime: string | null;
@@ -49,11 +58,14 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
 
     // Summarizing
     const [summary, setSummary] = useState("");
+    const [originalSummary, setOriginalSummary] = useState("");
     const [isSummarizing, setIsSummarizing] = useState(false);
     const [summaryError, setSummaryError] = useState<string | null>(null);
 
     // Task Extraction
-    const [tasks, setTasks] = useState<Task[]>([]);
+    const [extractedTasks, setExtractedTasks] = useState<ExtractedTask[]>([]);
+    const [tasks, setTasks] = useState<TaskItemData[]>([]);
+    const [originalTasks, setOriginalTasks] = useState<TaskItemData[]>([]);
     const [isExtractingTasks, setIsExtractingTasks] = useState(false);
     const [tasksError, setTasksError] = useState<string | null>(null);
 
@@ -71,6 +83,30 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
                     setTape(data.data);
                     setTitle(data.data.title);
                     setContent(data.data.content);
+                    if (data.data.summary) {
+                        setSummary(data.data.summary);
+                        setOriginalSummary(data.data.summary);
+                        setShowSummary(true);
+                    }
+                    // Load tasks
+                    if (data.data.tasks && data.data.tasks.length > 0) {
+                        const loadedTasks: TaskItemData[] = data.data.tasks.map(
+                            (t: {
+                                id: number;
+                                text: string;
+                                completed: boolean;
+                                time: string | null;
+                            }) => ({
+                                id: `task-${t.id}`,
+                                text: t.text,
+                                completed: t.completed,
+                                time: t.time || undefined,
+                            }),
+                        );
+                        setTasks(loadedTasks);
+                        setOriginalTasks(loadedTasks);
+                        setShowTasks(true);
+                    }
                 } else {
                     setError("Failed to load tape");
                 }
@@ -100,12 +136,23 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
             const response = await fetch(`/api/tapes/${tapeId}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ title, content }),
+                body: JSON.stringify({
+                    title,
+                    content,
+                    summary: summary || null,
+                    tasks: tasks.map((t) => ({
+                        text: t.text,
+                        completed: t.completed,
+                        time: t.time || null,
+                    })),
+                }),
             });
             const data = await response.json();
             if (data.success) {
                 setTape(data.data);
                 setHasChanges(false);
+                setOriginalSummary(summary);
+                setOriginalTasks(tasks);
             } else {
                 setError("Failed to save tape");
             }
@@ -217,7 +264,7 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
 
         setIsExtractingTasks(true);
         setTasksError(null);
-        setTasks([]);
+        setExtractedTasks([]);
         setShowTasks(true);
 
         try {
@@ -252,7 +299,7 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
                 return;
             }
 
-            setTasks(data.tasks);
+            setExtractedTasks(data.tasks);
         } catch (error) {
             console.error("Task extraction error:", error);
             if (error instanceof Error) {
@@ -297,6 +344,11 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
                             title={title}
                             onTitleChange={handleTitleChange}
                             hasChanges={hasChanges}
+                            hasSummaryChanges={summary !== originalSummary}
+                            hasTaskChanges={
+                                JSON.stringify(tasks) !==
+                                JSON.stringify(originalTasks)
+                            }
                             tape={tape}
                             error={error}
                             saving={saving}
@@ -354,7 +406,9 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
                     isOpen={showTasks}
                     onClose={() => setShowTasks(false)}
                     onExtractTasks={handleExtractTasks}
+                    extractedTasks={extractedTasks}
                     tasks={tasks}
+                    setTasks={setTasks}
                     isExtractingTasks={isExtractingTasks}
                     tasksError={tasksError}
                 />
