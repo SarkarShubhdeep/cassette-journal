@@ -11,6 +11,7 @@ export const postsTable = pgTable("posts", {
     id: serial("id").primaryKey(),
     title: text("title").notNull(),
     content: text("content").notNull(),
+    summary: text("summary"),
     userId: integer("user_id")
         .notNull()
         .references(() => usersTable.id, { onDelete: "cascade" }),

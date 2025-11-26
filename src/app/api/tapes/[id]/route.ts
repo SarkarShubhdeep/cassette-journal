@@ -79,7 +79,7 @@ export async function PUT(
         const { id } = await params;
         const tapeId = parseInt(id);
         const body = await request.json();
-        const { title, content } = body;
+        const { title, content, summary } = body;
 
         if (!title || content === undefined) {
             return NextResponse.json(
@@ -105,7 +105,7 @@ export async function PUT(
 
         const updatedTape = await db
             .update(postsTable)
-            .set({ title, content })
+            .set({ title, content, summary: summary ?? null })
             .where(eq(postsTable.id, tapeId))
             .returning();
 

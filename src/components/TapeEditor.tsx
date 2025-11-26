@@ -13,6 +13,7 @@ interface Tape {
     id: number;
     title: string;
     content: string;
+    summary?: string | null;
     createdAt: string;
     updatedAt: string;
 }
@@ -49,6 +50,7 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
 
     // Summarizing
     const [summary, setSummary] = useState("");
+    const [originalSummary, setOriginalSummary] = useState("");
     const [isSummarizing, setIsSummarizing] = useState(false);
     const [summaryError, setSummaryError] = useState<string | null>(null);
 
@@ -71,6 +73,11 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
                     setTape(data.data);
                     setTitle(data.data.title);
                     setContent(data.data.content);
+                    if (data.data.summary) {
+                        setSummary(data.data.summary);
+                        setOriginalSummary(data.data.summary);
+                        setShowSummary(true);
+                    }
                 } else {
                     setError("Failed to load tape");
                 }
@@ -100,12 +107,17 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
             const response = await fetch(`/api/tapes/${tapeId}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ title, content }),
+                body: JSON.stringify({
+                    title,
+                    content,
+                    summary: summary || null,
+                }),
             });
             const data = await response.json();
             if (data.success) {
                 setTape(data.data);
                 setHasChanges(false);
+                setOriginalSummary(summary);
             } else {
                 setError("Failed to save tape");
             }
@@ -297,6 +309,7 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
                             title={title}
                             onTitleChange={handleTitleChange}
                             hasChanges={hasChanges}
+                            hasSummaryChanges={summary !== originalSummary}
                             tape={tape}
                             error={error}
                             saving={saving}

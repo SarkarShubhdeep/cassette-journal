@@ -14,6 +14,7 @@ interface TapeHeaderProps {
     title: string;
     onTitleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     hasChanges: boolean;
+    hasSummaryChanges: boolean;
     tape: { updatedAt: string } | null;
     error: string | null;
     saving: boolean;
@@ -26,6 +27,7 @@ export default function TapeHeader({
     title,
     onTitleChange,
     hasChanges,
+    hasSummaryChanges,
     tape,
     error,
     saving,
@@ -97,7 +99,7 @@ export default function TapeHeader({
                 <Button
                     onClick={onSave}
                     variant="ghost"
-                    disabled={!hasChanges || saving}
+                    disabled={(!hasChanges && !hasSummaryChanges) || saving}
                     className="flex items-center gap-2"
                 >
                     {saving ? "Saving..." : "Save"}
