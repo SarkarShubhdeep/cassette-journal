@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Reorder } from "framer-motion";
 import TaskItem, { TaskItemData } from "./TaskItem";
 import { Button } from "./ui/button";
@@ -17,7 +17,9 @@ interface TapeTasksPanelProps {
     isOpen: boolean;
     onClose: () => void;
     onExtractTasks: () => void;
-    tasks: ExtractedTask[];
+    extractedTasks: ExtractedTask[];
+    tasks: TaskItemData[];
+    setTasks: React.Dispatch<React.SetStateAction<TaskItemData[]>>;
     isExtractingTasks: boolean;
     tasksError: string | null;
 }
@@ -36,32 +38,26 @@ export default function TapeTasksPanel({
     isOpen,
     onClose,
     onExtractTasks,
-    tasks: extractedTasks,
+    extractedTasks,
+    tasks,
+    setTasks,
     isExtractingTasks,
     tasksError,
 }: TapeTasksPanelProps) {
-    const [tasks, setTasks] = useState<TaskItemData[]>([]);
-
-    // Convert extracted tasks when they change
+    // Convert extracted tasks when they change (from AI extraction)
     const extractedTasksJson = JSON.stringify(extractedTasks);
     useEffect(() => {
         if (extractedTasks.length > 0) {
             setTasks(convertToTaskItems(extractedTasks));
-        } else {
-            setTasks([]);
         }
-    }, [extractedTasksJson, extractedTasks]);
+    }, [extractedTasksJson, extractedTasks, setTasks]);
 
     // Show panel if open AND (has tasks OR is loading OR has error)
     if (!isOpen) {
         return null;
     }
 
-    const hasContent =
-        tasks.length > 0 ||
-        extractedTasks.length > 0 ||
-        isExtractingTasks ||
-        tasksError;
+    const hasContent = tasks.length > 0 || isExtractingTasks || tasksError;
     if (!hasContent) {
         return null;
     }
@@ -118,7 +114,7 @@ export default function TapeTasksPanel({
             <div className="flex flex-1 flex-col gap-4 overflow-auto p-4">
                 {isExtractingTasks && (
                     <div className="flex items-center gap-2">
-                        <div className="h-3 w-3 animate-spin rounded-full border-2 border-green-500 border-t-transparent" />
+                        <div className="h-3 w-3 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
                         <span className="text-sm text-blue-500">
                             Extracting tasks...
                         </span>

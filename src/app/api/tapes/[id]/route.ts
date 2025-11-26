@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { postsTable, usersTable } from "@/schema";
+import { postsTable, usersTable, tasksTable } from "@/schema";
 import { auth0 } from "@/lib/auth0";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
@@ -52,7 +52,13 @@ export async function GET(
             );
         }
 
-        return NextResponse.json({ success: true, data: tape });
+        const tasks = await db
+            .select()
+            .from(tasksTable)
+            .where(eq(tasksTable.postId, tapeId))
+            .orderBy(tasksTable.sortOrder);
+
+        return NextResponse.json({ success: true, data: { ...tape, tasks } });
     } catch (error) {
         console.error("Error fetching tape:", error);
         return NextResponse.json(
@@ -79,7 +85,7 @@ export async function PUT(
         const { id } = await params;
         const tapeId = parseInt(id);
         const body = await request.json();
-        const { title, content, summary } = body;
+        const { title, content, summary, tasks } = body;
 
         if (!title || content === undefined) {
             return NextResponse.json(
@@ -109,7 +115,45 @@ export async function PUT(
             .where(eq(postsTable.id, tapeId))
             .returning();
 
-        return NextResponse.json({ success: true, data: updatedTape[0] });
+        // Handle tasks if provided
+        if (tasks && Array.isArray(tasks)) {
+            // Delete existing tasks for this tape
+            await db.delete(tasksTable).where(eq(tasksTable.postId, tapeId));
+
+            // Insert new tasks with sort order
+            if (tasks.length > 0) {
+                await db.insert(tasksTable).values(
+                    tasks.map(
+                        (
+                            task: {
+                                text: string;
+                                completed: boolean;
+                                time?: string;
+                            },
+                            index: number,
+                        ) => ({
+                            postId: tapeId,
+                            text: task.text,
+                            completed: task.completed,
+                            time: task.time || null,
+                            sortOrder: index,
+                        }),
+                    ),
+                );
+            }
+        }
+
+        // Fetch updated tasks to return
+        const updatedTasks = await db
+            .select()
+            .from(tasksTable)
+            .where(eq(tasksTable.postId, tapeId))
+            .orderBy(tasksTable.sortOrder);
+
+        return NextResponse.json({
+            success: true,
+            data: { ...updatedTape[0], tasks: updatedTasks },
+        });
     } catch (error) {
         console.error("Error updating tape:", error);
         return NextResponse.json(

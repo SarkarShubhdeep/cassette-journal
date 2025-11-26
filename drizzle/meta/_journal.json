@@ -15,6 +15,13 @@
       "when": 1764191168754,
       "tag": "0001_slim_lockjaw",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1764193029611,
+      "tag": "0002_breezy_mindworm",
+      "breakpoints": true
     }
   ]
 }

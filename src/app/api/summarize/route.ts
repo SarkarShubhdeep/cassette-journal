@@ -34,10 +34,9 @@ export async function POST(request: NextRequest) {
                         {
                             role: "system",
                             content: `You are a helpful assistant that summarizes voice journal entries. 
-                        Create a concise summary with 3-5 key bullet points.
+                        Create a concise summary with 3-5 key bullet points in plain text no markdown syntax.
                         Focus on main ideas, decisions, and action items.
-                        Keep it brief and actionable. 
-                        In the end write a one line comment for the day. You can be 50% sarcastic. `,
+                        Keep it brief and actionable.`,
                         },
                         {
                             role: "user",
