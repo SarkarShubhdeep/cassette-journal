@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
-import { Reorder } from "framer-motion";
+import { useEffect, useState } from "react";
+import { Reorder, motion, AnimatePresence } from "framer-motion";
 import TaskItem, { TaskItemData } from "./TaskItem";
 import { Button } from "./ui/button";
-import { RotateCcw, Share, X } from "lucide-react";
+import { ArrowUpDown, Plus, RotateCcw, Search, Share, X } from "lucide-react";
+import { Badge } from "./ui/badge";
 
 interface ExtractedTask {
     task: string;
@@ -44,6 +45,11 @@ export default function TapeTasksPanel({
     isExtractingTasks,
     tasksError,
 }: TapeTasksPanelProps) {
+    const [sortedByTime, setSortedByTime] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [showSearch, setShowSearch] = useState(false);
+    const [newTaskText, setNewTaskText] = useState("");
+
     // Convert extracted tasks when they change (from AI extraction)
     const extractedTasksJson = JSON.stringify(extractedTasks);
     useEffect(() => {
@@ -86,12 +92,75 @@ export default function TapeTasksPanel({
         );
     };
 
+    const deleteTask = (id: string) => {
+        setTasks(tasks.filter((task) => task.id !== id));
+    };
+
+    const handleSortByTime = () => {
+        if (sortedByTime) {
+            // Reset to original order
+            setSortedByTime(false);
+        } else {
+            // Sort by time (tasks with time first, then without)
+            const sorted = [...tasks].sort((a, b) => {
+                if (a.time && !b.time) return -1;
+                if (!a.time && b.time) return 1;
+                if (a.time && b.time) {
+                    return (
+                        new Date(a.time).getTime() - new Date(b.time).getTime()
+                    );
+                }
+                return 0;
+            });
+            setTasks(sorted);
+            setSortedByTime(true);
+        }
+    };
+
+    const handleSearch = (query: string) => {
+        setSearchQuery(query);
+    };
+
+    const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === "Escape") {
+            setShowSearch(false);
+            setSearchQuery("");
+        }
+    };
+
+    const handleAddTask = () => {
+        if (newTaskText.trim()) {
+            const newTask: TaskItemData = {
+                id: `task-${Date.now()}`,
+                text: newTaskText.trim(),
+                completed: false,
+                time: undefined,
+            };
+            setTasks([...tasks, newTask]);
+            setNewTaskText("");
+        }
+    };
+
+    const handleNewTaskKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            handleAddTask();
+        }
+    };
+
+    const filteredTasks = searchQuery.trim()
+        ? tasks.filter((task) =>
+              task.text.toLowerCase().includes(searchQuery.toLowerCase()),
+          )
+        : tasks;
+
     return (
-        <div className="relative flex h-screen max-w-2xl min-w-lg flex-col overflow-hidden border-x">
+        <div className="relative flex h-screen max-w-2xl min-w-md flex-col overflow-hidden border-x">
             {/* Fixed Header */}
             <div className="bg-background flex h-24 w-full items-center justify-between border-b px-4 backdrop-blur">
-                <h3 className="text-xl font-medium text-blue-400 dark:text-blue-300">
+                <h3 className="flex items-center gap-2 text-xl font-medium text-blue-500 dark:text-blue-300">
                     TASKS
+                    <Badge className="bg-blue-500">{tasks.length}</Badge>
                 </h3>
                 <div className="flex flex-1 justify-end gap-2">
                     <Button
@@ -111,7 +180,67 @@ export default function TapeTasksPanel({
             </div>
 
             {/* Content Area */}
-            <div className="flex flex-1 flex-col gap-4 overflow-auto p-4">
+            <div className="relative flex flex-1 flex-col gap-4 overflow-auto pb-24">
+                <div className="bg-background sticky top-0 z-20 flex w-full items-center justify-between gap-4 border-b px-4">
+                    {/* Sort by time button */}
+                    <div className="flex h-10 w-fit items-center">
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            className={`cursor-pointer rounded-none ${
+                                sortedByTime
+                                    ? "text-blue-600 dark:text-blue-400"
+                                    : "text-blue-500"
+                            }`}
+                            onClick={handleSortByTime}
+                            title={
+                                sortedByTime
+                                    ? "Click to reset sort order"
+                                    : "Click to sort by time"
+                            }
+                        >
+                            <ArrowUpDown />
+                            Sort by Time
+                        </Button>
+                    </div>
+                    {/* Animated Search Button/Input */}
+                    <AnimatePresence mode="wait">
+                        {!showSearch ? (
+                            <motion.div
+                                key="search-button"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                transition={{ duration: 0.1 }}
+                                className="flex h-10 w-fit items-center"
+                            >
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="cursor-pointer rounded-none text-blue-500"
+                                    onClick={() => setShowSearch(true)}
+                                >
+                                    <Search />
+                                </Button>
+                            </motion.div>
+                        ) : (
+                            <motion.input
+                                key="search-input"
+                                type="text"
+                                placeholder="Search tasks..."
+                                value={searchQuery}
+                                onChange={(e) => handleSearch(e.target.value)}
+                                onKeyDown={handleSearchKeyDown}
+                                autoFocus
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 20 }}
+                                transition={{ duration: 0.1 }}
+                                className="placeholder-muted-foreground h-10 w-sm border-l bg-transparent px-3 py-2 font-mono text-sm focus:outline-none"
+                            />
+                        )}
+                    </AnimatePresence>
+                </div>
                 {isExtractingTasks && (
                     <div className="flex items-center gap-2">
                         <div className="h-3 w-3 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
@@ -127,14 +256,14 @@ export default function TapeTasksPanel({
                     </div>
                 )}
 
-                {tasks.length > 0 && (
+                {filteredTasks.length > 0 && (
                     <Reorder.Group
                         axis="y"
-                        values={tasks}
+                        values={filteredTasks}
                         onReorder={setTasks}
-                        className="space-y-2"
+                        className="space-y-2 px-4"
                     >
-                        {tasks.map((task) => (
+                        {filteredTasks.map((task) => (
                             <TaskItem
                                 key={task.id}
                                 task={task}
@@ -145,10 +274,36 @@ export default function TapeTasksPanel({
                                 onUpdateTime={(newTime) =>
                                     updateTime(task.id, newTime)
                                 }
+                                onDelete={() => deleteTask(task.id)}
                             />
                         ))}
                     </Reorder.Group>
                 )}
+                {searchQuery.trim() && filteredTasks.length === 0 && (
+                    <div className="text-muted-foreground px-4 py-4 text-center text-sm">
+                        No tasks match &quot;{searchQuery}&quot;
+                    </div>
+                )}
+            </div>
+
+            {/* Bottom Bar - Add Task */}
+            <div className="bg-background absolute bottom-0 z-20 flex h-20 w-full items-center justify-between gap-4 border-t p-4">
+                <input
+                    type="text"
+                    placeholder="Add new task..."
+                    value={newTaskText}
+                    onChange={(e) => setNewTaskText(e.target.value)}
+                    onKeyDown={handleNewTaskKeyDown}
+                    className="placeholder-muted-foreground focus:ring-none h-full flex-1 px-2 py-2 font-mono focus:outline-none"
+                />
+                <Button
+                    size="icon-lg"
+                    onClick={handleAddTask}
+                    disabled={!newTaskText.trim()}
+                    className="h-full w-12 rounded-none"
+                >
+                    <Plus />
+                </Button>
             </div>
         </div>
     );

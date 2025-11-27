@@ -24,7 +24,7 @@ export default function TapeSummaryPanel({
     }
 
     return (
-        <div className="relative flex h-screen max-w-2xl min-w-lg flex-col overflow-hidden border-x">
+        <div className="relative flex h-screen max-w-2xl min-w-md flex-col overflow-hidden border-x">
             {/* Fixed Header */}
             <div className="bg-background flex h-24 w-full items-center justify-between border-b px-4 backdrop-blur">
                 <h3 className="text-xl font-medium text-green-400 dark:text-green-300">

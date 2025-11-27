@@ -18,6 +18,7 @@ interface TaskItemProps {
     onToggleComplete: () => void;
     onUpdateText: (newText: string) => void;
     onUpdateTime: (newTime: string) => void;
+    onDelete: () => void;
 }
 
 export default function TaskItem({
@@ -25,6 +26,7 @@ export default function TaskItem({
     onToggleComplete,
     onUpdateText,
     onUpdateTime,
+    onDelete,
 }: TaskItemProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState(task.text);
@@ -55,7 +57,7 @@ export default function TaskItem({
     return (
         <Reorder.Item
             value={task}
-            className="flex cursor-grab items-center justify-between border border-blue-300/20 bg-blue-300/20 p-2 active:cursor-grabbing"
+            className="group flex cursor-grab items-center justify-between border border-blue-300/20 bg-blue-300/20 p-2 transition-all duration-200 active:cursor-grabbing"
             style={{ position: "relative" }}
         >
             <div className="flex grow items-start gap-3">
@@ -77,23 +79,30 @@ export default function TaskItem({
                             onKeyDown={handleKeyDown}
                             onBlur={saveEdit}
                             autoFocus
-                            className="w-full p-0 font-mono focus:ring-0 focus:outline-none"
+                            className="mb-1 w-full min-w-full p-0 font-mono focus:ring-0 focus:outline-none"
                         />
                     ) : (
                         <span
                             onClick={startEditing}
-                            className={`hover:bg-accent/30 mb-1 w-fit cursor-text rounded font-mono ${
+                            className={`hover:bg-accent/30 mb-1 block cursor-text rounded font-mono ${
                                 task.completed ? "line-through" : ""
                             }`}
                         >
                             {task.text}
                         </span>
                     )}
-
-                    <DateTimePicker
-                        value={task.time || null}
-                        onChange={onUpdateTime}
-                    />
+                    <div className="flex items-center gap-3">
+                        <DateTimePicker
+                            value={task.time || null}
+                            onChange={onUpdateTime}
+                        />
+                        <button
+                            onClick={onDelete}
+                            className="ml-2 hidden cursor-pointer rounded text-xs font-bold text-red-400 transition-all duration-200 group-hover:block hover:text-red-500"
+                        >
+                            Delete
+                        </button>
+                    </div>
                 </p>
             </div>
             <GripVertical size={16} className="text-muted-foreground" />

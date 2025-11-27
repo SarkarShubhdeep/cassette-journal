@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "./ui/button";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
@@ -73,6 +73,9 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
     const [showSummary, setShowSummary] = useState(false);
     const [showTasks, setShowTasks] = useState(false);
 
+    // Track if tasks were modified by user actions (not initial load)
+    const tasksModifiedRef = useRef(false);
+
     useEffect(() => {
         const fetchTape = async () => {
             try {
@@ -120,6 +123,10 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
         fetchTape();
     }, [tapeId]);
 
+    useEffect(() => {
+        tasksModifiedRef.current = true;
+    }, []);
+
     const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setTitle(e.target.value);
         setHasChanges(true);
@@ -130,7 +137,7 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
         setHasChanges(true);
     };
 
-    const handleSave = async () => {
+    const handleSave = useCallback(async () => {
         try {
             setSaving(true);
             const response = await fetch(`/api/tapes/${tapeId}`, {
@@ -162,7 +169,17 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
         } finally {
             setSaving(false);
         }
-    };
+    }, [tapeId, title, content, summary, tasks]);
+
+    // Auto-save when tasks change (after initial load)
+    useEffect(() => {
+        if (
+            tasksModifiedRef.current &&
+            JSON.stringify(tasks) !== JSON.stringify(originalTasks)
+        ) {
+            handleSave();
+        }
+    }, [tasks, originalTasks, handleSave]);
 
     const handleDelete = async () => {
         if (!confirm("Are you sure you want to delete this tape?")) return;
