@@ -109,6 +109,9 @@ export default function TapeHeader({
                     }
                     className="flex items-center gap-2"
                 >
+                    {saving && (
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    )}
                     {saving ? "Saving..." : "Save"}
                 </Button>
             </div>

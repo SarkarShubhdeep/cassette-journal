@@ -56,50 +56,16 @@ export default function DateTimePicker({
         onClose?.();
     };
 
-    const getRelativeDate = (date: Date): string => {
-        const today = new Date();
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-
-        const dateOnly = new Date(
-            date.getFullYear(),
-            date.getMonth(),
-            date.getDate(),
-        );
-        const todayOnly = new Date(
-            today.getFullYear(),
-            today.getMonth(),
-            today.getDate(),
-        );
-        const yesterdayOnly = new Date(
-            yesterday.getFullYear(),
-            yesterday.getMonth(),
-            yesterday.getDate(),
-        );
-        const tomorrowOnly = new Date(
-            tomorrow.getFullYear(),
-            tomorrow.getMonth(),
-            tomorrow.getDate(),
-        );
-
-        if (dateOnly.getTime() === todayOnly.getTime()) {
-            return "Today";
-        } else if (dateOnly.getTime() === yesterdayOnly.getTime()) {
-            return "Yesterday";
-        } else if (dateOnly.getTime() === tomorrowOnly.getTime()) {
-            return "Tomorrow";
-        } else {
-            return date.toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-            });
-        }
+    const getFormattedDate = (date: Date): string => {
+        return date.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+        });
     };
 
     const displayValue = value
-        ? `${getRelativeDate(new Date(value))}, ${new Date(
+        ? `${getFormattedDate(new Date(value))}, ${new Date(
               value,
           ).toLocaleTimeString("en-US", {
               hour: "2-digit",

@@ -70,6 +70,10 @@ export default function TestReorderPage() {
         );
     };
 
+    const deleteTodo = (id: string) => {
+        setTodos(todos.filter((todo) => todo.id !== id));
+    };
+
     return (
         <div className="bg-background min-h-screen p-8">
             <div className="mx-auto max-w-2xl">
@@ -97,6 +101,7 @@ export default function TestReorderPage() {
                                 onUpdateTime={(newTime) =>
                                     updateTime(todo.id, newTime)
                                 }
+                                onDelete={() => deleteTodo(todo.id)}
                             />
                         ))}
                     </Reorder.Group>
