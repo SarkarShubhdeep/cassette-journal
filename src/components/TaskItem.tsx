@@ -91,7 +91,7 @@ export default function TaskItem({
                             {task.text}
                         </span>
                     )}
-                    <div className="flex items-center gap-3">
+                    <span className="flex items-center gap-3">
                         <DateTimePicker
                             value={task.time || null}
                             onChange={onUpdateTime}
@@ -102,7 +102,7 @@ export default function TaskItem({
                         >
                             Delete
                         </button>
-                    </div>
+                    </span>
                 </p>
             </div>
             <GripVertical size={16} className="text-muted-foreground" />

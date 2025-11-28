@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "./ui/button";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 import TapeHeader from "./TapeHeader";
@@ -54,7 +55,6 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
         startRecording,
         stopRecording,
     } = useAudioRecorder();
-    const [transcribedText, setTranscribedText] = useState("");
 
     // Summarizing
     const [summary, setSummary] = useState("");
@@ -229,7 +229,6 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
             const event = new Event("input", { bubbles: true });
             textareaRef.current.dispatchEvent(event);
 
-            setTranscribedText(text);
             setHasChanges(true);
         }
     };
@@ -352,9 +351,15 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
 
     return (
         <div className="min-h-screen">
-            <div className="flex h-full w-full justify-center gap-3 overflow-hidden">
+            <motion.div
+                className="flex h-full w-full justify-center gap-3 overflow-hidden"
+                layout
+            >
                 {/* Main Tape Area */}
-                <div className="relative flex h-screen max-w-6xl min-w-lg grow flex-col border-x">
+                <motion.div
+                    className="relative flex h-screen max-w-6xl min-w-lg grow flex-col border-x"
+                    layout
+                >
                     {/* Tape Header */}
                     <div className="w-full">
                         <TapeHeader
@@ -399,37 +404,55 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
                             recordingError={recordingError}
                             isSummarizing={isSummarizing}
                             isExtractingTasks={isExtractingTasks}
-                            transcribedText={transcribedText}
+                            transcribedText={content}
+                            hasSummary={!!summary}
+                            hasTasks={tasks.length > 0}
+                            isSummaryOpen={showSummary}
+                            isTasksOpen={showTasks}
                             onStartRecording={handleStartRecording}
                             onStopRecording={handleStopRecording}
                             onSummarize={handleSummarize}
                             onExtractTasks={handleExtractTasks}
+                            onToggleSummary={() => setShowSummary(!showSummary)}
+                            onToggleTasks={() => setShowTasks(!showTasks)}
                         />
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Summary Panel */}
-                <TapeSummaryPanel
-                    isOpen={showSummary}
-                    onClose={() => setShowSummary(false)}
-                    onSummarize={handleSummarize}
-                    summary={summary}
-                    isSummarizing={isSummarizing}
-                    summaryError={summaryError}
-                />
+                <AnimatePresence>
+                    {showSummary && (
+                        <motion.div layout layoutId="summary-panel">
+                            <TapeSummaryPanel
+                                isOpen={showSummary}
+                                onClose={() => setShowSummary(false)}
+                                onSummarize={handleSummarize}
+                                summary={summary}
+                                isSummarizing={isSummarizing}
+                                summaryError={summaryError}
+                            />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {/* Tasks Panel */}
-                <TapeTasksPanel
-                    isOpen={showTasks}
-                    onClose={() => setShowTasks(false)}
-                    onExtractTasks={handleExtractTasks}
-                    extractedTasks={extractedTasks}
-                    tasks={tasks}
-                    setTasks={setTasks}
-                    isExtractingTasks={isExtractingTasks}
-                    tasksError={tasksError}
-                />
-            </div>
+                <AnimatePresence>
+                    {showTasks && (
+                        <motion.div layout layoutId="tasks-panel">
+                            <TapeTasksPanel
+                                isOpen={showTasks}
+                                onClose={() => setShowTasks(false)}
+                                onExtractTasks={handleExtractTasks}
+                                extractedTasks={extractedTasks}
+                                tasks={tasks}
+                                setTasks={setTasks}
+                                isExtractingTasks={isExtractingTasks}
+                                tasksError={tasksError}
+                            />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </motion.div>
         </div>
     );
 }
