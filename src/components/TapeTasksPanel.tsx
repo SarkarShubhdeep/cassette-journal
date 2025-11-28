@@ -4,8 +4,24 @@ import { useEffect, useState } from "react";
 import { Reorder, motion, AnimatePresence } from "framer-motion";
 import TaskItem, { TaskItemData } from "./TaskItem";
 import { Button } from "./ui/button";
-import { ArrowUpDown, Plus, RotateCcw, Search, Share, X } from "lucide-react";
+import {
+    ArrowUpDown,
+    Plus,
+    RotateCcw,
+    Search,
+    Share,
+    X,
+    AlertTriangle,
+} from "lucide-react";
 import { Badge } from "./ui/badge";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "./ui/dialog";
 
 interface ExtractedTask {
     task: string;
@@ -49,6 +65,7 @@ export default function TapeTasksPanel({
     const [searchQuery, setSearchQuery] = useState("");
     const [showSearch, setShowSearch] = useState(false);
     const [newTaskText, setNewTaskText] = useState("");
+    const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
     // Convert extracted tasks when they change (from AI extraction)
     const extractedTasksJson = JSON.stringify(extractedTasks);
@@ -155,7 +172,14 @@ export default function TapeTasksPanel({
         : tasks;
 
     return (
-        <div className="relative flex h-screen max-w-2xl min-w-md flex-col overflow-hidden border-x">
+        <motion.div
+            className="relative flex h-screen max-w-2xl min-w-md flex-col overflow-hidden border-x"
+            initial={{ y: "100%", opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: "100%", opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            layout
+        >
             {/* Fixed Header */}
             <div className="bg-background flex h-24 w-full items-center justify-between border-b px-4 backdrop-blur">
                 <h3 className="flex items-center gap-2 text-xl font-medium text-blue-500 dark:text-blue-300">
@@ -166,7 +190,7 @@ export default function TapeTasksPanel({
                     <Button
                         size="icon"
                         variant="ghost"
-                        onClick={onExtractTasks}
+                        onClick={() => setShowConfirmDialog(true)}
                     >
                         <RotateCcw />
                     </Button>
@@ -242,7 +266,7 @@ export default function TapeTasksPanel({
                     </AnimatePresence>
                 </div>
                 {isExtractingTasks && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 px-4">
                         <div className="h-3 w-3 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
                         <span className="text-sm text-blue-500">
                             Extracting tasks...
@@ -300,11 +324,49 @@ export default function TapeTasksPanel({
                     size="icon-lg"
                     onClick={handleAddTask}
                     disabled={!newTaskText.trim()}
-                    className="h-full w-12 rounded-none"
+                    className="h-12 w-12 rounded-none"
                 >
                     <Plus />
                 </Button>
             </div>
-        </div>
+
+            {/* Confirmation Dialog */}
+            <Dialog
+                open={showConfirmDialog}
+                onOpenChange={setShowConfirmDialog}
+            >
+                <DialogContent className="">
+                    <DialogHeader>
+                        <div className="flex items-center gap-2">
+                            <AlertTriangle className="h-5 w-5" />
+                            <DialogTitle>Regenerate tasks</DialogTitle>
+                        </div>
+                        <DialogDescription className="mt-2 text-red-600">
+                            This action will delete all current tasks and
+                            regenerate new ones from your content. Any manual
+                            edits or completions will be lost.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="mt-2 gap-2">
+                        <span
+                            className="hover:bg-accent cursor-pointer px-3 py-2 text-sm"
+                            onClick={() => setShowConfirmDialog(false)}
+                        >
+                            Cancel
+                        </span>
+
+                        <span
+                            className="bg-foreground hover:bg-foreground/90 text-background cursor-pointer px-3 py-2 text-sm"
+                            onClick={() => {
+                                setShowConfirmDialog(false);
+                                onExtractTasks();
+                            }}
+                        >
+                            Yes, I&apos;m sure
+                        </span>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </motion.div>
     );
 }

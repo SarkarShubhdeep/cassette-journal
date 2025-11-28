@@ -1,4 +1,5 @@
 "use client";
+import { motion } from "framer-motion";
 import { Button } from "./ui/button";
 import { RotateCcw, X } from "lucide-react";
 
@@ -24,10 +25,17 @@ export default function TapeSummaryPanel({
     }
 
     return (
-        <div className="relative flex h-screen max-w-2xl min-w-md flex-col overflow-hidden border-x">
+        <motion.div
+            className="relative flex h-screen max-w-2xl min-w-md flex-col overflow-hidden border-x"
+            initial={{ y: "100%", opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: "100%", opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            layout
+        >
             {/* Fixed Header */}
             <div className="bg-background flex h-24 w-full items-center justify-between border-b px-4 backdrop-blur">
-                <h3 className="text-xl font-medium text-green-400 dark:text-green-300">
+                <h3 className="text-xl font-medium text-green-500 dark:text-green-400">
                     SUMMARY OF YOUR DAY
                 </h3>
                 <div className="flex flex-1 justify-end gap-2">
@@ -73,6 +81,6 @@ export default function TapeSummaryPanel({
                     </div>
                 )}
             </div>
-        </div>
+        </motion.div>
     );
 }
