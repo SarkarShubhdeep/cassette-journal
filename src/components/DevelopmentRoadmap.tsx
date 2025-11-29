@@ -91,7 +91,7 @@ export function DevelopmentRoadmap() {
             </Collapsible>
 
             {/* Phase 1 */}
-            <Collapsible defaultOpen>
+            <Collapsible>
                 <CollapsibleTrigger asChild>
                     <div className="bg-accent flex grow items-center justify-between p-6">
                         <div className="flex items-center gap-5">
@@ -100,9 +100,9 @@ export function DevelopmentRoadmap() {
                             </h3>
                             <Badge
                                 variant="default"
-                                className="bg-yellow-400 text-yellow-900 dark:bg-yellow-700 dark:text-yellow-100"
+                                className="bg-green-400 text-green-900 dark:bg-green-700 dark:text-green-100"
                             >
-                                IN PROGRESS
+                                DONE
                             </Badge>
                         </div>
                         <ChevronDown />
@@ -157,8 +157,8 @@ export function DevelopmentRoadmap() {
                     <div className="flex grow flex-col items-start justify-start space-y-2 sm:flex-row">
                         <div className="w-sm">
                             UI/UX and CRUD
-                            <span className="ml-4 font-semibold text-yellow-600">
-                                IN PROGRESS
+                            <span className="ml-4 font-semibold text-green-600">
+                                DONE
                             </span>
                         </div>
                         <div className="flex-1">
@@ -178,13 +178,19 @@ export function DevelopmentRoadmap() {
             </Collapsible>
 
             {/* Phase 2 */}
-            <Collapsible>
+            <Collapsible defaultOpen>
                 <CollapsibleTrigger asChild>
                     <div className="bg-accent flex grow items-center justify-between p-6">
                         <div className="flex items-center gap-5">
                             <h3 className="font-semibold">
                                 Phase 2: Improve UI and Performance
                             </h3>
+                            <Badge
+                                variant="default"
+                                className="bg-yellow-400 text-yellow-900 dark:bg-yellow-700 dark:text-yellow-100"
+                            >
+                                IN PROGRESS
+                            </Badge>
                         </div>
                         <ChevronDown />
                     </div>
@@ -193,7 +199,7 @@ export function DevelopmentRoadmap() {
                     <div className="flex grow flex-col items-start justify-start space-y-2 sm:flex-row">
                         <div className="w-sm">
                             UI/UX
-                            <span className="ml-4 hidden font-semibold text-yellow-600">
+                            <span className="ml-4 font-semibold text-yellow-600">
                                 IN PROGRESS
                             </span>
                         </div>
