@@ -1,19 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import LogoutButton from "./LogoutButton";
 import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "./ui/button";
-import { Trash2, Plus, ArrowUpRight } from "lucide-react";
+import { Plus, Settings2 } from "lucide-react";
+import { TapesDataTable } from "./tapes-table/data-table";
+import { createColumns, Tape } from "./tapes-table/columns";
 
-interface Tape {
-    id: number;
-    title: string;
-    content: string;
-    createdAt: string;
-    updatedAt: string;
-}
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "./ui/dialog";
+import { Label } from "./ui/label";
+import { Switch } from "./ui/switch";
 
 interface User {
     sub?: string;
@@ -33,11 +36,137 @@ export default function HomeContent({ user }: { user: User }) {
     const [dbUser, setDbUser] = useState<DbUser | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [showSummary, setShowSummary] = useState(false);
+    const [isGeneratingSummaries, setIsGeneratingSummaries] = useState(false);
+    const [editingTapeId, setEditingTapeId] = useState<number | null>(null);
+
+    // Load showSummary preference from localStorage
+    useEffect(() => {
+        const saved = localStorage.getItem("showSummaryInPreview");
+        if (saved !== null) {
+            setShowSummary(JSON.parse(saved));
+        }
+    }, []);
+
+    // Save showSummary preference to localStorage
+    const handleShowSummaryChange = (checked: boolean) => {
+        setShowSummary(checked);
+        localStorage.setItem("showSummaryInPreview", JSON.stringify(checked));
+    };
+
+    const handleDelete = useCallback(async (tapeId: number) => {
+        if (!confirm("Are you sure you want to delete this tape?")) return;
+
+        try {
+            const response = await fetch(`/api/tapes/${tapeId}`, {
+                method: "DELETE",
+            });
+            const data = await response.json();
+            if (data.success) {
+                setTapes((prev) => prev.filter((t) => t.id !== tapeId));
+            } else {
+                setError("Failed to delete tape");
+            }
+        } catch (err) {
+            setError("Error deleting tape");
+            console.error(err);
+        }
+    }, []);
+
+    const handleTitleUpdate = useCallback(
+        async (tapeId: number, newTitle: string) => {
+            try {
+                const response = await fetch(`/api/tapes/${tapeId}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ title: newTitle }),
+                });
+                const data = await response.json();
+                if (data.success) {
+                    setTapes((prev) =>
+                        prev.map((t) =>
+                            t.id === tapeId ? { ...t, title: newTitle } : t,
+                        ),
+                    );
+                } else {
+                    setError("Failed to update title");
+                }
+            } catch (err) {
+                setError("Error updating title");
+                console.error(err);
+            }
+        },
+        [],
+    );
+
+    const columns = useMemo(
+        () =>
+            createColumns(
+                handleDelete,
+                showSummary,
+                editingTapeId,
+                setEditingTapeId,
+                handleTitleUpdate,
+            ),
+        [handleDelete, showSummary, editingTapeId, handleTitleUpdate],
+    );
+
+    const handleBatchDelete = useCallback(async (ids: number[]) => {
+        try {
+            const results = await Promise.all(
+                ids.map((id) =>
+                    fetch(`/api/tapes/${id}`, { method: "DELETE" }).then((r) =>
+                        r.json(),
+                    ),
+                ),
+            );
+
+            const successCount = results.filter((r) => r.success).length;
+            if (successCount > 0) {
+                setTapes((prev) => prev.filter((t) => !ids.includes(t.id)));
+            }
+
+            if (successCount < ids.length) {
+                setError(
+                    `Failed to delete ${ids.length - successCount} tape(s)`,
+                );
+            }
+        } catch (err) {
+            setError("Error deleting tapes");
+            console.error(err);
+        }
+    }, []);
 
     useEffect(() => {
         fetchUserProfile();
         fetchTapes();
     }, []);
+
+    // Generate summaries for tapes that don't have them
+    const generateMissingSummaries = useCallback(async () => {
+        setIsGeneratingSummaries(true);
+        try {
+            const response = await fetch("/api/tapes/generate-summaries", {
+                method: "POST",
+            });
+            const data = await response.json();
+            if (data.success && data.generated > 0) {
+                // Refresh tapes to get the new summaries
+                await fetchTapes();
+            }
+        } catch (err) {
+            console.error("Error generating summaries:", err);
+        } finally {
+            setIsGeneratingSummaries(false);
+        }
+    }, []);
+
+    // Auto-generate short summaries when switching to summary view
+    useEffect(() => {
+        if (showSummary && tapes.some((t) => t.content && !t.shortSummary)) {
+            generateMissingSummaries();
+        }
+    }, [showSummary, tapes, generateMissingSummaries]);
 
     const fetchUserProfile = async () => {
         try {
@@ -69,25 +198,6 @@ export default function HomeContent({ user }: { user: User }) {
         }
     };
 
-    const handleDelete = async (tapeId: number) => {
-        if (!confirm("Are you sure you want to delete this tape?")) return;
-
-        try {
-            const response = await fetch(`/api/tapes/${tapeId}`, {
-                method: "DELETE",
-            });
-            const data = await response.json();
-            if (data.success) {
-                setTapes(tapes.filter((t) => t.id !== tapeId));
-            } else {
-                setError("Failed to delete tape");
-            }
-        } catch (err) {
-            setError("Error deleting tape");
-            console.error(err);
-        }
-    };
-
     const handleCreateNew = async () => {
         try {
             const response = await fetch("/api/tapes", {
@@ -101,6 +211,8 @@ export default function HomeContent({ user }: { user: User }) {
             const data = await response.json();
             if (data.success) {
                 setTapes([...tapes, data.data]);
+                // Automatically enter edit mode for the new tape
+                setEditingTapeId(data.data.id);
             } else {
                 setError(data.error || "Failed to create tape");
             }
@@ -128,22 +240,44 @@ export default function HomeContent({ user }: { user: User }) {
                     )}
                 </div>
                 <div className="flex gap-3">
-                    <Button className="rounded-full">
-                        <ArrowUpRight size={20} />
-                        <Link href="/whisper-test" target="_blank">
-                            Test Ground
-                        </Link>
-                    </Button>
-
                     {/* Create New Button */}
                     <Button
                         onClick={handleCreateNew}
-                        className="flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700"
+                        className="flex items-center gap-2 rounded-full bg-blue-600 text-white hover:bg-blue-700"
                     >
                         <Plus size={20} />
                         New Tape
                     </Button>
-                    <ThemeToggle />
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button variant="secondary">
+                                <Settings2 size={20} />
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Settings</DialogTitle>
+                            </DialogHeader>
+                            <ThemeToggle />
+                            <div className="flex items-center justify-between gap-2">
+                                <Label htmlFor="summary-toggle">
+                                    View summary instead of tape preview
+                                </Label>
+                                <Switch
+                                    id="summary-toggle"
+                                    checked={showSummary}
+                                    onCheckedChange={handleShowSummaryChange}
+                                    disabled={isGeneratingSummaries}
+                                />
+                            </div>
+                            {isGeneratingSummaries && (
+                                <p className="text-muted-foreground text-sm">
+                                    Generating summaries...
+                                </p>
+                            )}
+                        </DialogContent>
+                    </Dialog>
+
                     <LogoutButton />
                 </div>
             </div>
@@ -163,46 +297,16 @@ export default function HomeContent({ user }: { user: User }) {
                     </div>
                 )}
 
-                {/* Tapes List */}
-                {!loading && tapes.length === 0 && (
-                    <div className="py-12 text-center">
-                        <p className="mb-4">
-                            No tapes yet. Create your first one!
-                        </p>
-                    </div>
-                )}
-
-                {!loading && tapes.length > 0 && (
-                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-                        {tapes.map((tape) => (
-                            <Link key={tape.id} href={`/tapes/${tape.id}`}>
-                                <div className="dark:bg-card flex h-full cursor-pointer flex-col bg-gray-100 p-6 transition-all duration-200 hover:bg-slate-300 dark:hover:bg-gray-800">
-                                    <h3 className="mb-2 line-clamp-2 text-lg font-semibold transition-colors">
-                                        {tape.title}
-                                    </h3>
-                                    <p className="text-muted-foreground mb-4 line-clamp-2 grow text-sm">
-                                        {tape.content || "No content yet..."}
-                                    </p>
-                                    <div className="flex items-center justify-between border-t border-slate-600 pt-4">
-                                        <span className="text-xs">
-                                            {new Date(
-                                                tape.updatedAt,
-                                            ).toLocaleDateString()}
-                                        </span>
-                                        <button
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                handleDelete(tape.id);
-                                            }}
-                                            className="transition-colors hover:text-red-400"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </div>
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
+                {/* Tapes Table */}
+                {!loading && (
+                    <TapesDataTable
+                        columns={columns}
+                        data={tapes}
+                        onBatchDelete={handleBatchDelete}
+                        editingTapeId={editingTapeId}
+                        setEditingTapeId={setEditingTapeId}
+                        onTitleUpdate={handleTitleUpdate}
+                    />
                 )}
             </div>
         </div>

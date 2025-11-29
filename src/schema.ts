@@ -19,6 +19,7 @@ export const postsTable = pgTable("posts", {
     title: text("title").notNull(),
     content: text("content").notNull(),
     summary: text("summary"),
+    shortSummary: text("short_summary"), // One-liner for table view
     userId: integer("user_id")
         .notNull()
         .references(() => usersTable.id, { onDelete: "cascade" }),

@@ -163,6 +163,66 @@ export async function PUT(
     }
 }
 
+// PATCH update partial tape (e.g., just title)
+export async function PATCH(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> },
+) {
+    try {
+        const session = await auth0.getSession();
+        if (!session?.user) {
+            return NextResponse.json(
+                { success: false, error: "Unauthorized" },
+                { status: 401 },
+            );
+        }
+
+        const { id } = await params;
+        const tapeId = parseInt(id);
+        const body = await request.json();
+        const { title } = body;
+
+        if (!title) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: "Title is required",
+                },
+                { status: 400 },
+            );
+        }
+
+        // Verify ownership before updating
+        const existingTape = await verifyTapeOwnership(
+            tapeId,
+            session.user.email!,
+        );
+        if (!existingTape) {
+            return NextResponse.json(
+                { success: false, error: "Tape not found or unauthorized" },
+                { status: 404 },
+            );
+        }
+
+        const updatedTape = await db
+            .update(postsTable)
+            .set({ title })
+            .where(eq(postsTable.id, tapeId))
+            .returning();
+
+        return NextResponse.json({
+            success: true,
+            data: updatedTape[0],
+        });
+    } catch (error) {
+        console.error("Error updating tape:", error);
+        return NextResponse.json(
+            { success: false, error: "Failed to update tape" },
+            { status: 500 },
+        );
+    }
+}
+
 // DELETE tape
 export async function DELETE(
     request: NextRequest,
