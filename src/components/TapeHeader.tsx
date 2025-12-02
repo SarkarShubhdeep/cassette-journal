@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 interface TapeHeaderProps {
     title: string;
     onTitleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onTitleKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
     hasChanges: boolean;
     hasSummaryChanges: boolean;
     hasTaskChanges: boolean;
@@ -27,6 +28,7 @@ interface TapeHeaderProps {
 export default function TapeHeader({
     title,
     onTitleChange,
+    onTitleKeyDown,
     hasChanges,
     hasSummaryChanges,
     hasTaskChanges,
@@ -58,6 +60,7 @@ export default function TapeHeader({
                     type="text"
                     value={title}
                     onChange={onTitleChange}
+                    onKeyDown={onTitleKeyDown}
                     placeholder="Tape title..."
                     className="w-full text-center font-mono text-xl font-bold focus:outline-none"
                 />

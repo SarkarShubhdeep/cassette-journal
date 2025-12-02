@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "./ui/button";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
+import { useQuickTimestamp } from "@/hooks/useQuickTimestamp";
 import TapeHeader from "./TapeHeader";
 import TapeControlBar from "./TapeControlBar";
 import TapeSummaryPanel from "./TapeSummaryPanel";
@@ -127,14 +128,33 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
         tasksModifiedRef.current = true;
     }, []);
 
+    // Quick timestamp hook
+    const quickTimestamp = useQuickTimestamp({ triggerOn: "space" });
+
     const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setTitle(e.target.value);
         setHasChanges(true);
     };
 
+    const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        quickTimestamp.handleKeyDown(e, title, (newValue) => {
+            setTitle(newValue);
+            setHasChanges(true);
+        });
+    };
+
     const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setContent(e.target.value);
         setHasChanges(true);
+    };
+
+    const handleContentKeyDown = (
+        e: React.KeyboardEvent<HTMLTextAreaElement>,
+    ) => {
+        quickTimestamp.handleKeyDown(e, content, (newValue) => {
+            setContent(newValue);
+            setHasChanges(true);
+        });
     };
 
     const handleSave = useCallback(async () => {
@@ -357,7 +377,7 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
             >
                 {/* Main Tape Area */}
                 <motion.div
-                    className="relative flex h-screen max-w-6xl min-w-lg grow flex-col border-x"
+                    className="relative flex h-screen max-w-6xl min-w-xl grow flex-col border-x"
                     layout
                 >
                     {/* Tape Header */}
@@ -377,6 +397,7 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
                             onSave={handleSave}
                             onDelete={handleDelete}
                             onShare={handleShare}
+                            onTitleKeyDown={handleTitleKeyDown}
                         />
                     </div>
 
@@ -389,6 +410,7 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
                                     ref={textareaRef}
                                     value={content}
                                     onChange={handleContentChange}
+                                    onKeyDown={handleContentKeyDown}
                                     placeholder="Start recording or typing your tape content..."
                                     className="h-full w-full resize-none bg-transparent px-4 py-16 font-mono focus:outline-none"
                                 />
