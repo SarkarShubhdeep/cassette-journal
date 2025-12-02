@@ -9,9 +9,10 @@ import {
     Plus,
     RotateCcw,
     Search,
-    Share,
+    Calendar,
     X,
     AlertTriangle,
+    Loader2,
 } from "lucide-react";
 import { Badge } from "./ui/badge";
 import {
@@ -69,6 +70,13 @@ export default function TapeTasksPanel({
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
     const quickTimestamp = useQuickTimestamp({ triggerOn: "space" });
 
+    // Google Calendar sync state
+    const [isGoogleConnected, setIsGoogleConnected] = useState<boolean | null>(
+        null,
+    );
+    const [isSyncing, setIsSyncing] = useState(false);
+    const [syncMessage, setSyncMessage] = useState<string | null>(null);
+
     // Convert extracted tasks when they change (from AI extraction)
     const extractedTasksJson = JSON.stringify(extractedTasks);
     useEffect(() => {
@@ -76,6 +84,92 @@ export default function TapeTasksPanel({
             setTasks(convertToTaskItems(extractedTasks));
         }
     }, [extractedTasksJson, extractedTasks, setTasks]);
+
+    // Check Google Calendar connection status
+    useEffect(() => {
+        const checkGoogleStatus = async () => {
+            try {
+                const response = await fetch("/api/calendar/status");
+                const data = await response.json();
+                if (data.success) {
+                    setIsGoogleConnected(data.connected);
+                }
+            } catch (error) {
+                console.error("Failed to check Google status:", error);
+            }
+        };
+        checkGoogleStatus();
+    }, []);
+
+    // Handle Google Calendar connection
+    const handleConnectGoogle = async () => {
+        try {
+            const response = await fetch("/api/auth/google");
+            const data = await response.json();
+            if (data.success && data.authUrl) {
+                window.location.href = data.authUrl;
+            }
+        } catch (error) {
+            console.error("Failed to initiate Google auth:", error);
+        }
+    };
+
+    // Handle sync to Google Calendar
+    const handleSyncToCalendar = async () => {
+        // Get tasks with timestamps (filter by tasks that have time set)
+        const tasksWithTime = tasks.filter((t) => t.time);
+
+        if (tasksWithTime.length === 0) {
+            setSyncMessage("No tasks with timestamps to sync");
+            setTimeout(() => setSyncMessage(null), 3000);
+            return;
+        }
+
+        // Extract numeric IDs from task IDs (format: "task-123" or "task-0-text")
+        const taskIds = tasksWithTime
+            .map((t) => {
+                const match = t.id.match(/task-(\d+)/);
+                return match ? parseInt(match[1], 10) : null;
+            })
+            .filter((id): id is number => id !== null && !isNaN(id));
+
+        if (taskIds.length === 0) {
+            setSyncMessage("Tasks need to be saved first before syncing");
+            setTimeout(() => setSyncMessage(null), 3000);
+            return;
+        }
+
+        setIsSyncing(true);
+        setSyncMessage(null);
+
+        try {
+            const response = await fetch("/api/calendar/sync", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ taskIds }),
+            });
+
+            const data = await response.json();
+
+            if (data.needsAuth) {
+                // User needs to connect Google Calendar
+                setIsGoogleConnected(false);
+                setSyncMessage("Please connect Google Calendar first");
+            } else if (data.success) {
+                setSyncMessage(
+                    `Synced ${data.synced} tasks to Google Calendar`,
+                );
+            } else {
+                setSyncMessage(data.error || "Failed to sync");
+            }
+        } catch (error) {
+            console.error("Sync error:", error);
+            setSyncMessage("Failed to sync to calendar");
+        } finally {
+            setIsSyncing(false);
+            setTimeout(() => setSyncMessage(null), 4000);
+        }
+    };
 
     // Show panel if open AND (has tasks OR is loading OR has error)
     if (!isOpen) {
@@ -196,17 +290,62 @@ export default function TapeTasksPanel({
                         size="icon"
                         variant="ghost"
                         onClick={() => setShowConfirmDialog(true)}
+                        title="Regenerate tasks"
                     >
                         <RotateCcw />
                     </Button>
-                    <Button size="icon" variant="ghost" disabled>
-                        <Share />
-                    </Button>
+                    {isGoogleConnected === false ? (
+                        <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={handleConnectGoogle}
+                            title="Connect Google Calendar"
+                            className="text-orange-500 hover:text-orange-600"
+                        >
+                            <Calendar />
+                        </Button>
+                    ) : (
+                        <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={handleSyncToCalendar}
+                            disabled={
+                                isSyncing ||
+                                tasks.filter((t) => t.time).length === 0
+                            }
+                            title="Sync to Google Calendar"
+                            className={
+                                isGoogleConnected
+                                    ? "text-green-500 hover:text-green-600"
+                                    : ""
+                            }
+                        >
+                            {isSyncing ? (
+                                <Loader2 className="animate-spin" />
+                            ) : (
+                                <Calendar />
+                            )}
+                        </Button>
+                    )}
                     <Button size="icon" variant="outline" onClick={onClose}>
                         <X />
                     </Button>
                 </div>
             </div>
+
+            {/* Sync Message */}
+            <AnimatePresence>
+                {syncMessage && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="border-b border-blue-500/30 bg-blue-500/20 px-4 py-2 text-center text-sm text-blue-500"
+                    >
+                        {syncMessage}
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Content Area */}
             <div className="relative flex flex-1 flex-col gap-4 overflow-auto pb-24">

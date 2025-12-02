@@ -11,6 +11,10 @@ export const usersTable = pgTable("users", {
     id: serial("id").primaryKey(),
     name: text("name").notNull(),
     email: text("email").notNull().unique(),
+    // Google OAuth tokens for Calendar sync
+    googleRefreshToken: text("google_refresh_token"),
+    googleAccessToken: text("google_access_token"),
+    googleTokenExpiry: timestamp("google_token_expiry"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -38,6 +42,8 @@ export const tasksTable = pgTable("tasks", {
     completed: boolean("completed").notNull().default(false),
     time: text("time"), // Store as ISO string for flexibility
     sortOrder: integer("sort_order").notNull().default(0),
+    // Google Calendar sync
+    googleEventId: text("google_event_id"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at")
         .notNull()
