@@ -357,7 +357,7 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
             >
                 {/* Main Tape Area */}
                 <motion.div
-                    className="relative flex h-screen max-w-6xl min-w-lg grow flex-col border-x"
+                    className="relative flex h-screen max-w-6xl min-w-2xl grow flex-col border-x"
                     layout
                 >
                     {/* Tape Header */}
