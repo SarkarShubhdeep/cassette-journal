@@ -22,6 +22,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "./ui/dialog";
+import { useQuickTimestamp } from "@/hooks/useQuickTimestamp";
 
 interface ExtractedTask {
     task: string;
@@ -66,6 +67,7 @@ export default function TapeTasksPanel({
     const [showSearch, setShowSearch] = useState(false);
     const [newTaskText, setNewTaskText] = useState("");
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+    const quickTimestamp = useQuickTimestamp({ triggerOn: "space" });
 
     // Convert extracted tasks when they change (from AI extraction)
     const extractedTasksJson = JSON.stringify(extractedTasks);
@@ -158,7 +160,10 @@ export default function TapeTasksPanel({
         }
     };
 
-    const handleNewTaskKeyDown = (e: React.KeyboardEvent) => {
+    const handleNewTaskKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        // Handle quick timestamp first
+        quickTimestamp.handleKeyDown(e, newTaskText, setNewTaskText);
+
         if (e.key === "Enter") {
             e.preventDefault();
             handleAddTask();

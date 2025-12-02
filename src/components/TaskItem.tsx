@@ -5,6 +5,7 @@ import { Reorder } from "framer-motion";
 import { GripVertical } from "lucide-react";
 import { Checkbox } from "./ui/checkbox";
 import DateTimePicker from "./DateTimePicker";
+import { useQuickTimestamp } from "@/hooks/useQuickTimestamp";
 
 export interface TaskItemData {
     id: string;
@@ -30,6 +31,7 @@ export default function TaskItem({
 }: TaskItemProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState(task.text);
+    const quickTimestamp = useQuickTimestamp({ triggerOn: "space" });
 
     const startEditing = () => {
         setIsEditing(true);
@@ -43,7 +45,10 @@ export default function TaskItem({
         setIsEditing(false);
     };
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        // Handle quick timestamp first
+        quickTimestamp.handleKeyDown(e, editValue, setEditValue);
+
         if (e.key === "Enter") {
             e.preventDefault();
             saveEdit();

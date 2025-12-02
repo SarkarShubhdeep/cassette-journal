@@ -19,6 +19,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useQuickTimestamp } from "@/hooks/useQuickTimestamp";
 
 export interface Tape {
     id: number;
@@ -44,6 +45,7 @@ function TitleCell({
     onTitleUpdate,
 }: TitleCellProps) {
     const [inputValue, setInputValue] = useState(tape.title || "");
+    const quickTimestamp = useQuickTimestamp({ triggerOn: "space" });
 
     const handleSave = async () => {
         const finalTitle = inputValue.trim() || "Untitled";
@@ -54,6 +56,9 @@ function TitleCell({
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        // Handle quick timestamp first
+        quickTimestamp.handleKeyDown(e, inputValue, setInputValue);
+
         if (e.key === "Enter") {
             handleSave();
         } else if (e.key === "Escape") {
