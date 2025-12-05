@@ -213,7 +213,7 @@ export function DevelopmentRoadmap() {
                     <div className="flex grow flex-col items-start justify-start space-y-2 sm:flex-row">
                         <div className="w-sm">
                             Scheduling/Reminders Display
-                            <span className="ml-4 hidden font-semibold text-yellow-600">
+                            <span className="ml-4 font-semibold text-yellow-600">
                                 IN PROGRESS
                             </span>
                         </div>

@@ -470,6 +470,7 @@ export default function TapeEditor({ tapeId }: { tapeId: number }) {
                                 setTasks={setTasks}
                                 isExtractingTasks={isExtractingTasks}
                                 tasksError={tasksError}
+                                tapeId={tapeId}
                             />
                         </motion.div>
                     )}

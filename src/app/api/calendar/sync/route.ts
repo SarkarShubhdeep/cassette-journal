@@ -8,6 +8,8 @@ import { syncTasksToCalendar, refreshAccessToken } from "@/lib/googleCalendar";
 /**
  * POST /api/calendar/sync
  * Syncs tasks with timestamps to Google Calendar
+ * If tapeId is provided, syncs all tasks from that tape
+ * Otherwise syncs specific tasks by ID
  */
 export async function POST(request: NextRequest) {
     try {
@@ -20,13 +22,19 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Get request body with task IDs to sync
+        // Get request body with either tapeId or taskIds
         const body = await request.json();
-        const { taskIds } = body as { taskIds: number[] };
+        const { tapeId, taskIds } = body as {
+            tapeId?: number;
+            taskIds?: number[];
+        };
 
-        if (!taskIds || taskIds.length === 0) {
+        if (!tapeId && (!taskIds || taskIds.length === 0)) {
             return NextResponse.json(
-                { success: false, error: "No tasks provided" },
+                {
+                    success: false,
+                    error: "Either tapeId or taskIds must be provided",
+                },
                 { status: 400 },
             );
         }
@@ -93,10 +101,20 @@ export async function POST(request: NextRequest) {
         }
 
         // Get tasks to sync
-        const tasks = await db
-            .select()
-            .from(tasksTable)
-            .where(inArray(tasksTable.id, taskIds));
+        let tasks: (typeof tasksTable.$inferSelect)[] = [];
+        if (tapeId) {
+            // Sync all tasks from a specific tape
+            tasks = await db
+                .select()
+                .from(tasksTable)
+                .where(eq(tasksTable.postId, tapeId));
+        } else if (taskIds && taskIds.length > 0) {
+            // Sync specific tasks by ID
+            tasks = await db
+                .select()
+                .from(tasksTable)
+                .where(inArray(tasksTable.id, taskIds));
+        }
 
         // Filter tasks with time and not already synced
         const tasksToSync = tasks

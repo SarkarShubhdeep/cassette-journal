@@ -6,8 +6,11 @@ const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_REDIRECT_URI,
 );
 
-// Scopes required for calendar access
-const SCOPES = ["https://www.googleapis.com/auth/calendar.events"];
+// Scopes required for calendar access and user info
+const SCOPES = [
+    "https://www.googleapis.com/auth/calendar.events",
+    "https://www.googleapis.com/auth/userinfo.email",
+];
 
 /**
  * Generate the Google OAuth URL for user authorization
@@ -22,11 +25,34 @@ export function getAuthUrl(state?: string): string {
 }
 
 /**
- * Exchange authorization code for tokens
+ * Exchange authorization code for tokens and get user email
  */
 export async function getTokensFromCode(code: string) {
     const { tokens } = await oauth2Client.getToken(code);
     return tokens;
+}
+
+/**
+ * Get Google user email from access token
+ */
+export async function getGoogleUserEmail(
+    accessToken: string,
+): Promise<string | null> {
+    try {
+        const auth = new google.auth.OAuth2(
+            process.env.GOOGLE_CLIENT_ID,
+            process.env.GOOGLE_CLIENT_SECRET,
+            process.env.GOOGLE_REDIRECT_URI,
+        );
+        auth.setCredentials({ access_token: accessToken });
+
+        const oauth2 = google.oauth2({ version: "v2", auth });
+        const userInfo = await oauth2.userinfo.get();
+        return userInfo.data.email || null;
+    } catch (error) {
+        console.error("Failed to get Google user email:", error);
+        return null;
+    }
 }
 
 /**

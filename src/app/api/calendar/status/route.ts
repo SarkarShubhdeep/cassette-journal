@@ -21,6 +21,7 @@ export async function GET() {
         const users = await db
             .select({
                 googleRefreshToken: usersTable.googleRefreshToken,
+                googleEmail: usersTable.googleEmail,
             })
             .from(usersTable)
             .where(eq(usersTable.email, session.user.email!));
@@ -29,12 +30,14 @@ export async function GET() {
             return NextResponse.json({
                 success: true,
                 connected: false,
+                googleEmail: null,
             });
         }
 
         return NextResponse.json({
             success: true,
             connected: !!users[0].googleRefreshToken,
+            googleEmail: users[0].googleEmail || null,
         });
     } catch (error) {
         console.error("Calendar status error:", error);

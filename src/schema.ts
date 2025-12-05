@@ -15,6 +15,7 @@ export const usersTable = pgTable("users", {
     googleRefreshToken: text("google_refresh_token"),
     googleAccessToken: text("google_access_token"),
     googleTokenExpiry: timestamp("google_token_expiry"),
+    googleEmail: text("google_email"), // Email of the connected Google account
     createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

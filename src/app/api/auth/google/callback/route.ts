@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getTokensFromCode } from "@/lib/googleCalendar";
+import { getTokensFromCode, getGoogleUserEmail } from "@/lib/googleCalendar";
 import { db } from "@/db";
 import { usersTable } from "@/schema";
 import { eq } from "drizzle-orm";
@@ -61,6 +61,9 @@ export async function GET(request: NextRequest) {
             );
         }
 
+        // Get Google user email
+        const googleEmail = await getGoogleUserEmail(tokens.access_token!);
+
         // Store tokens in database
         await db
             .update(usersTable)
@@ -70,6 +73,7 @@ export async function GET(request: NextRequest) {
                 googleTokenExpiry: tokens.expiry_date
                     ? new Date(tokens.expiry_date)
                     : null,
+                googleEmail: googleEmail,
             })
             .where(eq(usersTable.email, userEmail));
 

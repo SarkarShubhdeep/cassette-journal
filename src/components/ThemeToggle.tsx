@@ -17,7 +17,7 @@ export function ThemeToggle() {
     const isDark = theme === "dark";
 
     return (
-        <div className="flex items-center justify-between py-4">
+        <div className="flex items-center justify-between">
             <label htmlFor="theme-toggle" className="text-sm font-medium">
                 Dark Mode
             </label>

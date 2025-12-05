@@ -41,6 +41,7 @@ interface TapeTasksPanelProps {
     setTasks: React.Dispatch<React.SetStateAction<TaskItemData[]>>;
     isExtractingTasks: boolean;
     tasksError: string | null;
+    tapeId?: number;
 }
 
 // Convert extracted tasks to TaskItemData format
@@ -62,6 +63,7 @@ export default function TapeTasksPanel({
     setTasks,
     isExtractingTasks,
     tasksError,
+    tapeId,
 }: TapeTasksPanelProps) {
     const [sortedByTime, setSortedByTime] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
@@ -125,16 +127,8 @@ export default function TapeTasksPanel({
             return;
         }
 
-        // Extract numeric IDs from task IDs (format: "task-123" or "task-0-text")
-        const taskIds = tasksWithTime
-            .map((t) => {
-                const match = t.id.match(/task-(\d+)/);
-                return match ? parseInt(match[1], 10) : null;
-            })
-            .filter((id): id is number => id !== null && !isNaN(id));
-
-        if (taskIds.length === 0) {
-            setSyncMessage("Tasks need to be saved first before syncing");
+        if (!tapeId) {
+            setSyncMessage("Tape not loaded. Please refresh and try again.");
             setTimeout(() => setSyncMessage(null), 3000);
             return;
         }
@@ -146,7 +140,7 @@ export default function TapeTasksPanel({
             const response = await fetch("/api/calendar/sync", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ taskIds }),
+                body: JSON.stringify({ tapeId }),
             });
 
             const data = await response.json();
