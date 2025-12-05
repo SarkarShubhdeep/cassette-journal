@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import LogoutButton from "./LogoutButton";
 import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "./ui/button";
-import { Plus, Settings2 } from "lucide-react";
+import { Plus, Settings2, Calendar, Loader2, Check, X } from "lucide-react";
 import { TapesDataTable } from "./tapes-table/data-table";
 import { createColumns, Tape } from "./tapes-table/columns";
 
@@ -39,6 +39,14 @@ export default function HomeContent({ user }: { user: User }) {
     const [showSummary, setShowSummary] = useState(false);
     const [isGeneratingSummaries, setIsGeneratingSummaries] = useState(false);
     const [editingTapeId, setEditingTapeId] = useState<number | null>(null);
+
+    // Google Calendar state
+    const [isGoogleConnected, setIsGoogleConnected] = useState<boolean | null>(
+        null,
+    );
+    const [googleEmail, setGoogleEmail] = useState<string | null>(null);
+    const [isCheckingGoogle, setIsCheckingGoogle] = useState(false);
+    const [isConnectingGoogle, setIsConnectingGoogle] = useState(false);
 
     // Load showSummary preference from localStorage
     useEffect(() => {
@@ -136,6 +144,70 @@ export default function HomeContent({ user }: { user: User }) {
             console.error(err);
         }
     }, []);
+
+    // Check Google Calendar connection status
+    useEffect(() => {
+        const checkGoogleStatus = async () => {
+            setIsCheckingGoogle(true);
+            try {
+                const response = await fetch("/api/calendar/status");
+                const data = await response.json();
+                if (data.success) {
+                    setIsGoogleConnected(data.connected);
+                    setGoogleEmail(data.googleEmail);
+                }
+            } catch (error) {
+                console.error("Failed to check Google status:", error);
+            } finally {
+                setIsCheckingGoogle(false);
+            }
+        };
+        checkGoogleStatus();
+    }, []);
+
+    // Handle Google Calendar connection
+    const handleConnectGoogle = async () => {
+        setIsConnectingGoogle(true);
+        try {
+            const response = await fetch("/api/auth/google");
+            const data = await response.json();
+            if (data.success && data.authUrl) {
+                window.location.href = data.authUrl;
+            }
+        } catch (error) {
+            console.error("Failed to initiate Google auth:", error);
+            setError("Failed to connect Google Calendar");
+        } finally {
+            setIsConnectingGoogle(false);
+        }
+    };
+
+    // Handle Google Calendar disconnection
+    const handleDisconnectGoogle = async () => {
+        if (!confirm("Are you sure you want to disconnect Google Calendar?"))
+            return;
+
+        setIsConnectingGoogle(true);
+        try {
+            const response = await fetch("/api/calendar/disconnect", {
+                method: "POST",
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                setIsGoogleConnected(false);
+                setGoogleEmail(null);
+                setError(null);
+            } else {
+                setError(data.error || "Failed to disconnect Google Calendar");
+            }
+        } catch (error) {
+            console.error("Failed to disconnect:", error);
+            setError("Failed to disconnect Google Calendar");
+        } finally {
+            setIsConnectingGoogle(false);
+        }
+    };
 
     useEffect(() => {
         fetchUserProfile();
@@ -254,27 +326,111 @@ export default function HomeContent({ user }: { user: User }) {
                                 <Settings2 size={20} />
                             </Button>
                         </DialogTrigger>
-                        <DialogContent>
+                        <DialogContent className="max-w-md space-y-0">
                             <DialogHeader>
                                 <DialogTitle>Settings</DialogTitle>
                             </DialogHeader>
-                            <ThemeToggle />
-                            <div className="flex items-center justify-between gap-2">
-                                <Label htmlFor="summary-toggle">
-                                    View summary instead of tape preview
-                                </Label>
-                                <Switch
-                                    id="summary-toggle"
-                                    checked={showSummary}
-                                    onCheckedChange={handleShowSummaryChange}
-                                    disabled={isGeneratingSummaries}
-                                />
+
+                            {/* Theme Toggle */}
+                            <div className="border-b py-3">
+                                <ThemeToggle />
                             </div>
-                            {isGeneratingSummaries && (
+
+                            {/* Summary Preview Toggle */}
+                            <div className="border-b py-3">
+                                <div className="flex items-center justify-between gap-2">
+                                    <Label htmlFor="summary-toggle">
+                                        View summary instead of tape preview
+                                    </Label>
+                                    <Switch
+                                        id="summary-toggle"
+                                        checked={showSummary}
+                                        onCheckedChange={
+                                            handleShowSummaryChange
+                                        }
+                                        disabled={isGeneratingSummaries}
+                                    />
+                                </div>
+                                {isGeneratingSummaries && (
+                                    <p className="text-muted-foreground mt-2 text-sm">
+                                        Generating summaries...
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Google Calendar Connection */}
+                            <div className="space-y-3 py-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Label className="font-semibold">
+                                            Google Calendar
+                                        </Label>
+                                    </div>
+                                    {isCheckingGoogle ? (
+                                        <Loader2
+                                            size={18}
+                                            className="animate-spin text-slate-400"
+                                        />
+                                    ) : isGoogleConnected ? (
+                                        <div className="flex items-center gap-1 text-green-500">
+                                            <Check size={18} />
+                                            <span className="text-sm">
+                                                Connected
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-1 text-slate-400">
+                                            <X size={18} />
+                                            <span className="text-sm">
+                                                Not connected
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
                                 <p className="text-muted-foreground text-sm">
-                                    Generating summaries...
+                                    {isGoogleConnected
+                                        ? `Connected to: ${googleEmail}`
+                                        : "Connect your Google Calendar to sync tasks as calendar events."}
                                 </p>
-                            )}
+                                <div className="flex gap-2">
+                                    {isGoogleConnected ? (
+                                        <Button
+                                            size="sm"
+                                            variant="destructive"
+                                            onClick={handleDisconnectGoogle}
+                                            disabled={isConnectingGoogle}
+                                            className="rounded-none"
+                                        >
+                                            Disconnect
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            size="sm"
+                                            onClick={handleConnectGoogle}
+                                            disabled={isConnectingGoogle}
+                                            className="rounded-none bg-blue-600 hover:bg-blue-700"
+                                        >
+                                            {isConnectingGoogle ? (
+                                                <>
+                                                    <Loader2
+                                                        size={16}
+                                                        className="mr-2 animate-spin"
+                                                    />
+                                                    Connecting...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Calendar
+                                                        size={16}
+                                                        className="mr-2"
+                                                    />
+                                                    Connect
+                                                </>
+                                            )}
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
                         </DialogContent>
                     </Dialog>
 
